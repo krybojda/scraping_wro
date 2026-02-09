@@ -1,0 +1,22 @@
+fatal: ścieżka „mieszkania_complete.csv” nie pasuje do żadnych plików
+Nieznana tożsamość autora
+
+*** Powiedz mi, kim jesteś.
+
+Wykonaj
+
+  git config --global user.email "toja@example.com"
+  git config --global user.name "Twoje Imię Nazwisko"
+
+by ustawić domyślną tożsamość swojego konta.
+Pomiń --global, żeby ustawić tożsamość tylko w tym repozytorium.
+
+fatal: nie można wykryć automatycznie adresu e-mail (otrzymano „pi@rpi.(none)”)
+Brak niezapisanych zmian - czysto.
+Pobieram nowości z VPS...
+error: nie można wykonać zaciągnij z przestawieniem: masz nieprzygotowane zmiany.
+error: Złóż je lub dodaj do schowka.
+./run_rpi.sh: linia 24: $LOGfile: niejednoznaczne przekierowanie
+./run_rpi.sh: linia 27: $LOGfile: niejednoznaczne przekierowanie
+./run_rpi.sh: linia 31: $LOGfile: niejednoznaczne przekierowanie
+./run_rpi.sh: linia 46: $LOGfile: niejednoznaczne przekierowanie
