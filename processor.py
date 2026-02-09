@@ -48,13 +48,23 @@ def send_discord_alert(offer, type="Nowa oferta"):
         requests.post(DISCORD_URL, json={"embeds": [embed]})
     except: pass
 
-def normalize_value(val):
-    """Convert API field to plain string."""
+def as_str(val) -> str:
+    """Safely convert various API values (dict/list/primitive) to string."""
     if val is None:
         return ""
-    if isinstance(val, (list, tuple)):
-        return ", ".join([str(v) for v in val if v not in (None, "")])
+    # unwrap dicts with common text keys
+    if isinstance(val, dict):
+        for key in ("label", "value", "fullName", "name", "text"):
+            if key in val and val[key]:
+                return as_str(val[key])
+    if isinstance(val, (list, tuple, set)):
+        parts = [as_str(v) for v in val if v not in (None, "")]
+        return ", ".join([p for p in parts if p != ""])
     return str(val).strip()
+
+def normalize_value(val):
+    """Backward-compat shim: use as_str for normalization."""
+    return as_str(val)
 
 def get_from_chars(chars, keys):
     """Read characteristic list (otodom) in a case-insensitive way."""
@@ -62,14 +72,14 @@ def get_from_chars(chars, keys):
         if char.get('key') in keys:
             for field in ('localizedValue', 'valueLabel', 'value', 'formattedValue'):
                 if char.get(field):
-                    return normalize_value(char[field])
+                    return as_str(char[field])
     return ""
 
 def get_from_target(target, keys):
     """Fallback: direct lookup in target dict."""
     for key in keys:
         if key in target and target[key] not in (None, "", []):
-            return normalize_value(target[key])
+            return as_str(target[key])
     return ""
 
 def polish_floor(val: str) -> str:
@@ -99,18 +109,7 @@ def clean_number(txt: str) -> str:
     return m.group(0).replace(',', '.') if m else ""
 
 def loc_to_str(loc) -> str:
-    if not loc:
-        return ""
-    if isinstance(loc, str):
-        return loc
-    if isinstance(loc, dict):
-        for key in ("fullName", "name", "label", "value"):
-            val = loc.get(key)
-            if isinstance(val, dict):
-                val = val.get('label') or val.get('value')
-            if val:
-                return str(val)
-    return str(loc)
+    return as_str(loc)
 
 def get_full_details_json(url):
     try:
@@ -136,9 +135,9 @@ def get_full_details_json(url):
         geo = loc_obj.get('geoLocation') or loc_obj.get('address') or {}
         breadcrumbs = geo.get('breadcrumbs') or []
         addr = loc_obj.get('address', {})
-        street = addr.get('street', '') or addr.get('route', '')
-        number = addr.get('streetNumber', '') or addr.get('street_number', '')
-        city = addr.get('cityWithDistrict') or addr.get('city') or addr.get('region') or ""
+        street = as_str(addr.get('street', '') or addr.get('route', ''))
+        number = as_str(addr.get('streetNumber', '') or addr.get('street_number', ''))
+        city = as_str(addr.get('cityWithDistrict') or addr.get('city') or addr.get('region') or "")
 
         addr_str = " ".join([street, number]).strip()
         if city:
