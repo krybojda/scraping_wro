@@ -2,3 +2,5 @@ nohup.out
 reczne_uruchomienie.log
 scraper.log
 scraper_output.log
+logs/
+log_*.txt
