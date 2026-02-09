@@ -16,7 +16,11 @@ git pull --rebase origin main >> scraper.log 2>&1
 # 2>&1 oznacza "zapisz też błędy (stderr) w tym samym miejscu co zwykłe napisy"
 docker compose up --build >> scraper_output.log 2>&1
 
-# 4. Wyślij wyniki (mieszkania_vps.csv) do repozytorium
+# 4. NAPRAWA UPRAWNIEŃ (Kluczowe dla Dockera!)
+# Docker tworzy pliki jako root. Zmieniamy właściciela na obecnego użytkownika (ubuntu)
+sudo chown $USER:$USER *.csv 2>/dev/null
+
+# 5. Wyślij wyniki (mieszkania_vps.csv) do repozytorium
 # Przechodzimy do folderu (na wszelki wypadek)
 cd "$(dirname "$0")"
 
@@ -28,13 +32,17 @@ if git diff --staged --quiet; then
     echo "VPS: Brak nowych linków. Nie wysyłam."
 else
     # 1. Zapisz zmiany u siebie (lokalnie na VPS)
-    git commit -m "VPS: Nowe linki [$(date +'%Y-%m-%d %H:%M')]"
+    git commit -m "VPS: Nowe linki [$(date +'%Y-%m-%d %H:%M')]" >> scraper.log 2>&1
     
     # 2. POBIERZ ZMIANY Z RPi / GITHUB ACTIONS (Kluczowy moment!)
     echo "VPS: Pobieram zmiany z serwera (Rebase)..."
-    git pull --rebase origin main
+    git pull --rebase origin main >> scraper.log 2>&1
     
     # 3. Wyślij połączone zmiany
     echo "VPS: Wysyłam do GitHub..."
-    git push origin main
+    git push origin main >> scraper.log 2>&1
+fi
+
+# Logowanie zakończenia
+echo "=== KONIEC: $(date) ===" >> scraper.log
 fi
