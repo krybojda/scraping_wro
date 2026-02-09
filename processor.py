@@ -5,6 +5,8 @@ import time
 import random
 import os
 import json
+import csv
+import re
 from datetime import datetime
 from fake_useragent import UserAgent
 
@@ -113,6 +115,60 @@ def clean_number(txt: str) -> str:
 def loc_to_str(loc) -> str:
     return as_str(loc)
 
+def load_csv_safe(path):
+    """Wczytuje CSV nawet gdy tytuły mają nie-quoted przecinki. Zakłada, że link to pełny URL w wierszu."""
+    rows = []
+    if not os.path.exists(path):
+        return pd.DataFrame(columns=['data_pobrania','tytul','cena','metraz','link'])
+
+    with open(path, encoding="utf-8", errors="ignore") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            if line.lower().startswith("data_pobrania"):
+                continue  # nagłówek
+
+            # znajdź URL (ostatnie pole)
+            m = re.search(r'https?://\S+', line)
+            if not m:
+                continue
+            url = m.group(0).strip()
+
+            # usuń URL z linii
+            line_no_url = line.replace(url, "").rstrip(",\n\r ")
+
+            try:
+                parts = next(csv.reader([line_no_url]))
+            except Exception:
+                parts = line_no_url.split(",")
+
+            if len(parts) < 2:
+                continue
+
+            data_pobrania = parts[0].strip()
+            cena = ""
+            metraz = ""
+            if len(parts) >= 4:
+                # data, ...tytuł..., cena, metraz
+                cena = parts[-2].strip()
+                metraz = parts[-1].strip()
+                tytul = ",".join(parts[1:-2]).strip()
+            elif len(parts) == 3:
+                tytul = parts[1].strip()
+                cena = parts[2].strip()
+            else:  # len == 2
+                tytul = parts[1].strip()
+
+            rows.append({
+                'data_pobrania': data_pobrania,
+                'tytul': tytul,
+                'cena': cena,
+                'metraz': metraz,
+                'link': url
+            })
+
+    return pd.DataFrame(rows, columns=['data_pobrania','tytul','cena','metraz','link'])
+
 def get_full_details_json(url):
     try:
         sleep_time = random.uniform(45, 90)
@@ -203,11 +259,13 @@ def main():
 
     dfs = []
     if os.path.exists(FILE_GH): 
-        try: dfs.append(pd.read_csv(FILE_GH, on_bad_lines='skip'))
-        except: pass
+        try: dfs.append(load_csv_safe(FILE_GH))
+        except Exception as e: 
+            print(f"Nie mogę wczytać {FILE_GH}: {e}")
     if os.path.exists(FILE_VPS): 
-        try: dfs.append(pd.read_csv(FILE_VPS, on_bad_lines='skip'))
-        except: pass
+        try: dfs.append(load_csv_safe(FILE_VPS))
+        except Exception as e:
+            print(f"Nie mogę wczytać {FILE_VPS}: {e}")
     
     # Upewnij się, że MASTER_FILE istnieje (pusty z nagłówkiem), żeby git add nie wywalał się przy braku ofert
     if not os.path.exists(MASTER_FILE):

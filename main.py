@@ -5,6 +5,7 @@ import time
 import random
 import os
 import re
+import csv
 from datetime import datetime
 from fake_useragent import UserAgent  # NOWOŚĆ
 
@@ -100,7 +101,14 @@ def main():
         if page_data:
             df = pd.DataFrame(page_data)
             exists = os.path.isfile(FILE_NAME)
-            df.to_csv(FILE_NAME, mode='a', header=not exists, index=False)
+            df.to_csv(
+                FILE_NAME,
+                mode='a',
+                header=not exists,
+                index=False,
+                quoting=csv.QUOTE_MINIMAL,
+                escapechar='\\'
+            )
             print(f"Zapisano {len(page_data)} rekordów.")
         
         page += 1
