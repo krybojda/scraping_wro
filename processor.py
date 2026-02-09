@@ -8,6 +8,8 @@ import json
 from datetime import datetime
 from fake_useragent import UserAgent
 
+
+
 # --- KONFIGURACJA ---
 FILE_GH = "mieszkania_gh.csv"
 FILE_VPS = "mieszkania_vps.csv"
@@ -15,6 +17,8 @@ MASTER_FILE = "mieszkania_complete.csv"
 
 # !!! TUTAJ WKLEJ SWÓJ LINK Z DISCORDA !!!
 DISCORD_URL = "https://discord.com/api/webhooks/1470223047867764800/m08l3piGAiD5sSXnl2bTgJX1LRzopi9WBjSkqUp5s9eXRuXR6o4exmVLChVdWRIIk_R2"
+
+
 
 ua = UserAgent()
 
@@ -94,6 +98,20 @@ def clean_number(txt: str) -> str:
     m = re.search(r"[0-9]+(?:[\\.,][0-9]+)?", str(txt))
     return m.group(0).replace(',', '.') if m else ""
 
+def loc_to_str(loc) -> str:
+    if not loc:
+        return ""
+    if isinstance(loc, str):
+        return loc
+    if isinstance(loc, dict):
+        for key in ("fullName", "name", "label", "value"):
+            val = loc.get(key)
+            if isinstance(val, dict):
+                val = val.get('label') or val.get('value')
+            if val:
+                return str(val)
+    return str(loc)
+
 def get_full_details_json(url):
     try:
         sleep_time = random.uniform(45, 90)
@@ -127,7 +145,7 @@ def get_full_details_json(url):
             addr_str = (addr_str + ", " + city).strip(", ")
 
         lokalizacja = addr_str if addr_str else ", ".join(
-            [loc.get('fullName') or loc.get('name') or loc.get('label', '') for loc in breadcrumbs if loc]
+            [loc_to_str(loc) for loc in breadcrumbs if loc_to_str(loc)]
         )
 
         area_val = clean_number(get_from_target(target, ['Area', 'area']))
