@@ -271,7 +271,13 @@ def main():
     if not dfs: return
 
     df_raw = pd.concat(dfs, ignore_index=True)
+    # ustaw kolejność: najnowsze rekordy na końcu, żeby brać najświeższą cenę per link
+    if 'data_pobrania' in df_raw.columns:
+        df_raw['__ts'] = pd.to_datetime(df_raw['data_pobrania'], errors='coerce')
+        df_raw = df_raw.sort_values('__ts')
     df_unique = df_raw.drop_duplicates(subset='link', keep='last')
+    if '__ts' in df_unique.columns:
+        df_unique = df_unique.drop(columns='__ts')
 
     processed_prices = {}
     if os.path.exists(MASTER_FILE):
