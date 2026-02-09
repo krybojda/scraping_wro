@@ -25,7 +25,7 @@ git pull --rebase origin main >> $LOGfile 2>&1
 
 # 4. Uruchom procesor (głębokie skrapowanie + discord)
 # Używamy python3 zainstalowanego w systemie
-python3 processor.py >> $LOGfile 2>&1
+python3 -u processor.py >> $LOGfile 2>&1
 
 # 5. Wyślij bazę danych (Master File)
 git add mieszkania_complete.csv >> $LOGfile 2>&1

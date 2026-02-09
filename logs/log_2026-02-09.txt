@@ -1,0 +1,377 @@
+Brak niezapisanych zmian - czysto.
+Pobieram nowości z VPS...
+Z github.com:krybojda/Scraping_wro
+ * branch            main       -> FETCH_HEAD
+Już aktualne.
+[main 5e75f25] RPi: Nowe dane szczegółowe [2026-02-09 17:34]
+ 1 file changed, 5 insertions(+)
+ create mode 100644 mieszkania_complete.csv
+Pobieram ewentualne zmiany z VPS...
+Z github.com:krybojda/Scraping_wro
+ * branch            main       -> FETCH_HEAD
+Obecna gałąź main jest aktualna.
+Wysyłam do GitHub...
+To github.com:krybojda/Scraping_wro.git
+   118b78e..5e75f25  main -> main
+=== KONIEC: pon, 9 lut 2026, 17:34:21 CET ===
+Brak niezapisanych zmian - czysto.
+Pobieram nowości z VPS...
+error: nie można wykonać zaciągnij z przestawieniem: masz nieprzygotowane zmiany.
+error: Złóż je lub dodaj do schowka.
+--- START RPi PROCESSOR (Tryb Ultra-Safe) ---
+Znaleziono 357 nowych ogłoszeń do przetworzenia.
+[1/357] Przetwarzam: strow-tumski-ID4zxcl
+   (Czekam 68.8s dla niepoznaki...)
+[2/357] Przetwarzam: trum-wroclaw-ID4zUFi
+   (Czekam 52.2s dla niepoznaki...)
+[3/357] Przetwarzam: z-posrednika-ID4zIXj
+   (Czekam 70.3s dla niepoznaki...)
+[4/357] Przetwarzam: cja-2balkony-ID4zRb3
+   (Czekam 62.3s dla niepoznaki...)
+[5/357] Przetwarzam: klimatyzacja-ID42mOj
+   (Czekam 52.2s dla niepoznaki...)
+[6/357] Przetwarzam: tro-nowe-agd-ID4A0Fv
+   (Czekam 83.4s dla niepoznaki...)
+[7/357] Przetwarzam: -lokalizacji-ID4zSdm
+   (Czekam 51.9s dla niepoznaki...)
+[8/357] Przetwarzam: isko-centrum-ID4A0DN
+   (Czekam 68.0s dla niepoznaki...)
+[9/357] Przetwarzam: nia-od-zaraz-ID4A0D3
+   (Czekam 83.4s dla niepoznaki...)
+[10/357] Przetwarzam: orzu-gajowym-ID4zx4j
+   (Czekam 66.4s dla niepoznaki...)
+[11/357] Przetwarzam: blizanowicka-ID4A0BZ
+   (Czekam 88.1s dla niepoznaki...)
+[12/357] Przetwarzam: polis-oporow-ID4A0C1
+   (Czekam 73.6s dla niepoznaki...)
+[13/357] Przetwarzam: on-ferio-gaj-ID4zS3M
+   (Czekam 60.0s dla niepoznaki...)
+[14/357] Przetwarzam: -pod-blokiem-ID4z6vH
+   (Czekam 76.6s dla niepoznaki...)
+[15/357] Przetwarzam: iego-wroclaw-ID4A0Bk
+   (Czekam 63.4s dla niepoznaki...)
+[16/357] Przetwarzam: aras-parking-ID4bHs8
+   (Czekam 55.6s dla niepoznaki...)
+[17/357] Przetwarzam: ie-z-tarasem-ID4xR8g
+   (Czekam 76.3s dla niepoznaki...)
+[18/357] Przetwarzam: 22-m-wroclaw-ID4A0AS
+   (Czekam 56.7s dla niepoznaki...)
+[19/357] Przetwarzam: obna-kuchnia-ID4hFmK
+   (Czekam 75.0s dla niepoznaki...)
+[20/357] Przetwarzam: do-wynajecia-ID4zn43
+   (Czekam 80.2s dla niepoznaki...)
+[21/357] Przetwarzam: wnictwo-2025-ID4A0Ak
+   (Czekam 68.4s dla niepoznaki...)
+[22/357] Przetwarzam: a-pixelhouse-ID3ZgTy
+   (Czekam 59.3s dla niepoznaki...)
+[23/357] Przetwarzam: em-na-miasto-ID4yJHb
+   (Czekam 78.7s dla niepoznaki...)
+[24/357] Przetwarzam: oki-standard-ID4z4xU
+   (Czekam 60.5s dla niepoznaki...)
+[25/357] Przetwarzam: -z-garderoba-ID4zRGn
+   (Czekam 72.3s dla niepoznaki...)
+[26/357] Przetwarzam: gowe-w-cenie-ID4A0y6
+   (Czekam 77.7s dla niepoznaki...)
+[27/357] Przetwarzam: bez-prowizji-ID4zZND
+   (Czekam 48.3s dla niepoznaki...)
+[28/357] Przetwarzam: araz-komorka-ID4zS1W
+   (Czekam 66.9s dla niepoznaki...)
+[29/357] Przetwarzam: o-skarbowcow-ID4zEG2
+   (Czekam 85.2s dla niepoznaki...)
+[30/357] Przetwarzam: -srodmiescie-ID2tLOM
+   (Czekam 66.9s dla niepoznaki...)
+[31/357] Przetwarzam: es-pln-1-200-ID4zByC
+   (Czekam 77.2s dla niepoznaki...)
+[32/357] Przetwarzam: e-mieszkanie-ID4zOcD
+   (Czekam 54.2s dla niepoznaki...)
+[33/357] Przetwarzam: czna-wroclaw-ID4zUhe
+   (Czekam 62.6s dla niepoznaki...)
+[34/357] Przetwarzam: balkon-winda-ID4zPql
+   (Czekam 61.3s dla niepoznaki...)
+[35/357] Przetwarzam: j-ul-krzycka-ID4A0u1
+   (Czekam 77.1s dla niepoznaki...)
+[36/357] Przetwarzam: iwnica-garaz-ID4A0tD
+   (Czekam 45.1s dla niepoznaki...)
+[37/357] Przetwarzam: bez-prowizji-ID4zZwH
+   (Czekam 57.4s dla niepoznaki...)
+[38/357] Przetwarzam: oki-standard-ID4A0t7
+   (Czekam 77.9s dla niepoznaki...)
+[39/357] Przetwarzam: partynickiej-ID4A0sh
+   (Czekam 67.9s dla niepoznaki...)
+[40/357] Przetwarzam: koje-parking-ID4zndz
+   (Czekam 79.1s dla niepoznaki...)
+[41/357] Przetwarzam: klimatyzacja-ID4u8if
+   (Czekam 85.4s dla niepoznaki...)
+[42/357] Przetwarzam: aow-factoria-ID4A0hy
+   (Czekam 50.3s dla niepoznaki...)
+[43/357] Przetwarzam: niska-kaucja-ID4A0rB
+   (Czekam 79.4s dla niepoznaki...)
+[44/357] Przetwarzam: bez-prowizji-ID4A04w
+   (Czekam 82.3s dla niepoznaki...)
+[45/357] Przetwarzam: dodrze-rynek-ID4zWHI
+   (Czekam 56.6s dla niepoznaki...)
+[46/357] Przetwarzam: enie-parking-ID4A0rb
+   (Czekam 50.2s dla niepoznaki...)
+[47/357] Przetwarzam: ykipartynice-ID4A0qj
+   (Czekam 51.6s dla niepoznaki...)
+[48/357] Przetwarzam: pet-friendly-ID4zUnz
+   (Czekam 87.8s dla niepoznaki...)
+[49/357] Przetwarzam: rt-swojczyce-ID3o8rS
+   (Czekam 60.5s dla niepoznaki...)
+[50/357] Przetwarzam: ja-pets-frie-ID4A0pL
+   (Czekam 73.9s dla niepoznaki...)
+[51/357] Przetwarzam: owane-okazja-ID4zUh4
+   (Czekam 84.9s dla niepoznaki...)
+[52/357] Przetwarzam: m-przy-rynku-ID4yB1F
+   (Czekam 86.9s dla niepoznaki...)
+[53/357] Przetwarzam: lima-garaz-0-ID4zV4X
+   (Czekam 73.7s dla niepoznaki...)
+[54/357] Przetwarzam: nce-silownia-ID4zUly
+   (Czekam 84.2s dla niepoznaki...)
+[55/357] Przetwarzam: bezposrednio-ID4A0oW
+   (Czekam 87.0s dla niepoznaki...)
+[56/357] Przetwarzam: a-dla-singla-ID4zVbt
+   (Czekam 63.1s dla niepoznaki...)
+[57/357] Przetwarzam: acja-pets-ok-ID4A0o6
+   (Czekam 65.2s dla niepoznaki...)
+[58/357] Przetwarzam: e-z-balkonem-ID4zIaR
+   (Czekam 59.9s dla niepoznaki...)
+[59/357] Przetwarzam: bartoszowice-ID4zNS1
+   (Czekam 71.1s dla niepoznaki...)
+[60/357] Przetwarzam: do-wynajecia-ID4zMUZ
+   (Czekam 73.4s dla niepoznaki...)
+[61/357] Przetwarzam: erwszy-najem-ID4zFJa
+   (Czekam 89.7s dla niepoznaki...)
+[62/357] Przetwarzam: es-pln-1-200-ID4zByC
+   (Czekam 64.3s dla niepoznaki...)
+[63/357] Przetwarzam: nasza-oferte-ID4yvKA
+   (Czekam 73.9s dla niepoznaki...)
+[64/357] Przetwarzam: bez-prowizji-ID4A05a
+   (Czekam 47.0s dla niepoznaki...)
+[65/357] Przetwarzam: -pok-39m2-ip-ID4zKKV
+   (Czekam 46.2s dla niepoznaki...)
+[66/357] Przetwarzam: -z-ogrodkiem-ID4cTJv
+   (Czekam 57.5s dla niepoznaki...)
+[67/357] Przetwarzam: bez-prowizji-ID4zOq4
+   (Czekam 65.6s dla niepoznaki...)
+[68/357] Przetwarzam: e-z-balkonem-ID49Cvk
+   (Czekam 51.0s dla niepoznaki...)
+[69/357] Przetwarzam: l-dmowskiego-ID4w2QY
+   (Czekam 51.5s dla niepoznaki...)
+[70/357] Przetwarzam: na-ul-hlaski-ID4lord
+   (Czekam 49.1s dla niepoznaki...)
+[71/357] Przetwarzam: bez-prowizji-ID4ba6Z
+   (Czekam 52.3s dla niepoznaki...)
+[72/357] Przetwarzam: jowy-zakatek-ID44Rx7
+   (Czekam 48.7s dla niepoznaki...)
+[73/357] Przetwarzam: olimpia-port-ID4uJMB
+   (Czekam 83.1s dla niepoznaki...)
+[74/357] Przetwarzam: bezposrednio-ID4zVNa
+   (Czekam 83.1s dla niepoznaki...)
+[75/357] Przetwarzam: bez-prowizji-ID4zVM3
+   (Czekam 73.6s dla niepoznaki...)
+[76/357] Przetwarzam: bezposrednio-ID4zNXL
+   (Czekam 73.9s dla niepoznaki...)
+[77/357] Przetwarzam: enie-wynajmu-ID35gSc
+   (Czekam 51.1s dla niepoznaki...)
+[78/357] Przetwarzam: nt-w-centrum-ID4xWgI
+   (Czekam 80.2s dla niepoznaki...)
+[79/357] Przetwarzam: sercu-miasta-ID4zp48
+   (Czekam 46.0s dla niepoznaki...)
+[80/357] Przetwarzam: kon-od-marca-ID4zKxa
+   (Czekam 55.8s dla niepoznaki...)
+[81/357] Przetwarzam: e-mieszkanie-ID4zUxo
+   (Czekam 48.5s dla niepoznaki...)
+[82/357] Przetwarzam: a-lokatorska-ID4zecl
+   (Czekam 50.3s dla niepoznaki...)
+[83/357] Przetwarzam: zklad-balkon-ID4yPCx
+   (Czekam 50.4s dla niepoznaki...)
+[84/357] Przetwarzam: orka-w-cenie-ID4zdEX
+   (Czekam 74.9s dla niepoznaki...)
+[85/357] Przetwarzam: zyki-wroclaw-ID4zUb9
+   (Czekam 81.1s dla niepoznaki...)
+[86/357] Przetwarzam: arym-miescie-ID4A0jD
+   (Czekam 54.8s dla niepoznaki...)
+Błąd przy https://www.otodom.pl/pl/oferta/stylowe-mieszkanie-1-pokojowe-w-starym-miescie-ID4A0jD: 'ad'
+[87/357] Przetwarzam: e-z-balkonem-ID4A0ji
+   (Czekam 82.1s dla niepoznaki...)
+[88/357] Przetwarzam: sienkiewicza-ID4zTIu
+   (Czekam 50.8s dla niepoznaki...)
+[89/357] Przetwarzam: radowska-gaj-ID4zfaD
+   (Czekam 67.7s dla niepoznaki...)
+[90/357] Przetwarzam: e-os-parkowe-ID4A0iY
+   (Czekam 76.2s dla niepoznaki...)
+[main 7741a6c] RPi: Nowe dane szczegółowe [2026-02-09 19:16]
+ 1 file changed, 85 insertions(+)
+Pobieram ewentualne zmiany z VPS...
+error: nie można wykonać zaciągnij z przestawieniem: masz nieprzygotowane zmiany.
+error: Złóż je lub dodaj do schowka.
+Wysyłam do GitHub...
+To github.com:krybojda/Scraping_wro.git
+   5e75f25..7741a6c  main -> main
+=== KONIEC: pon, 9 lut 2026, 19:16:40 CET ===
+Brak niezapisanych zmian - czysto.
+Pobieram nowości z VPS...
+error: nie można wykonać zaciągnij z przestawieniem: masz nieprzygotowane zmiany.
+error: Złóż je lub dodaj do schowka.
+--- START RPi PROCESSOR (Tryb: Inteligentna Aktualizacja) ---
+Znaleziono 2043 ogłoszeń (Nowe + Zmiany cen). Pominięto 0 bez zmian.
+[1/2043] [NOWE] z-posrednika-ID4zIXj
+   (Czekam 81.2s...)
+[2/2043] [NOWE] cja-2balkony-ID4zRb3
+   (Czekam 88.1s...)
+[3/2043] [NOWE] klimatyzacja-ID42mOj
+   (Czekam 67.7s...)
+[4/2043] [NOWE] tro-nowe-agd-ID4A0Fv
+   (Czekam 59.7s...)
+[5/2043] [NOWE] -lokalizacji-ID4zSdm
+   (Czekam 81.1s...)
+[6/2043] [NOWE] -srodmiescie-ID2tLOM
+   (Czekam 50.9s...)
+[7/2043] [NOWE] bez-prowizji-ID4zZwH
+   (Czekam 85.4s...)
+[8/2043] [NOWE] bez-prowizji-ID4A04w
+   (Czekam 63.0s...)
+[9/2043] [NOWE] es-pln-1-200-ID4zByC
+   (Czekam 60.3s...)
+[10/2043] [NOWE] bez-prowizji-ID4A05a
+   (Czekam 72.4s...)
+[main ff585b8] RPi: Nowe dane szczegółowe [2026-02-09 20:20]
+ 1 file changed, 8 insertions(+)
+Pobieram ewentualne zmiany z VPS...
+error: nie można wykonać zaciągnij z przestawieniem: masz nieprzygotowane zmiany.
+error: Złóż je lub dodaj do schowka.
+Wysyłam do GitHub...
+To github.com:krybojda/Scraping_wro.git
+   ee5621b..ff585b8  main -> main
+=== KONIEC: pon, 9 lut 2026, 20:20:06 CET ===
+Brak niezapisanych zmian - czysto.
+Pobieram nowości z VPS...
+Z github.com:krybojda/Scraping_wro
+ * branch            main       -> FETCH_HEAD
+Już aktualne.
+[main 1e37254] RPi: Nowe dane szczegółowe [2026-02-09 21:07]
+ 1 file changed, 7 insertions(+)
+Pobieram ewentualne zmiany z VPS...
+Z github.com:krybojda/Scraping_wro
+ * branch            main       -> FETCH_HEAD
+Obecna gałąź main jest aktualna.
+Wysyłam do GitHub...
+To github.com:krybojda/Scraping_wro.git
+   ff585b8..1e37254  main -> main
+=== KONIEC: pon, 9 lut 2026, 21:07:13 CET ===
+Brak niezapisanych zmian - czysto.
+Pobieram nowości z VPS...
+Z github.com:krybojda/Scraping_wro
+ * branch            main       -> FETCH_HEAD
+Już aktualne.
+[main 7680a57] RPi: Nowe dane szczegółowe [2026-02-09 21:19]
+ 1 file changed, 4 insertions(+)
+ create mode 100644 mieszkania_complete.csv
+Pobieram ewentualne zmiany z VPS...
+Z github.com:krybojda/Scraping_wro
+ * branch            main       -> FETCH_HEAD
+Obecna gałąź main jest aktualna.
+Wysyłam do GitHub...
+To github.com:krybojda/Scraping_wro.git
+   b0b159e..7680a57  main -> main
+=== KONIEC: pon, 9 lut 2026, 21:19:35 CET ===
+Brak niezapisanych zmian - czysto.
+Pobieram nowości z VPS...
+error: nie można wykonać zaciągnij z przestawieniem: masz nieprzygotowane zmiany.
+error: Złóż je lub dodaj do schowka.
+--- START RPi PROCESSOR (Naprawiona Kolejność) ---
+Do przetworzenia: 2040
+[1/2040] tro-nowe-agd-ID4A0Fv
+   (Czekam 49.8s...)
+[2/2040] -lokalizacji-ID4zSdm
+   (Czekam 78.7s...)
+[3/2040] -srodmiescie-ID2tLOM
+   (Czekam 77.4s...)
+[4/2040] bez-prowizji-ID4zZwH
+   (Czekam 81.8s...)
+[5/2040] bez-prowizji-ID4A04w
+   (Czekam 70.3s...)
+[6/2040] es-pln-1-200-ID4zByC
+   (Czekam 57.9s...)
+[7/2040] bez-prowizji-ID4A05a
+   (Czekam 83.0s...)
+[8/2040] dom.pl/hpr/undefined
+   (Czekam 55.7s...)
+[9/2040] pne-od-zaraz-ID4zkjI
+   (Czekam 66.4s...)
+[10/2040] lne-od-zaraz-ID4z6Qk
+   (Czekam 78.3s...)
+[11/2040] zji-ul-dobra-ID4zZZ1
+   (Czekam 86.8s...)
+[12/2040] klimatyzacja-ID4zxof
+   (Czekam 73.9s...)
+[13/2040] -strzegomska-ID4zWiM
+   (Czekam 87.4s...)
+[14/2040] uga-szczepin-ID4qRjj
+   (Czekam 89.2s...)
+[15/2040] ieumeblowane-ID4zd4b
+   (Czekam 76.9s...)
+[16/2040] -posrednikow-ID3rdck
+   (Czekam 86.2s...)
+[17/2040] ce-postojowe-ID4A1aT
+   (Czekam 46.9s...)
+[18/2040] ickim-miasta-ID4zfVU
+   (Czekam 48.2s...)
+[19/2040] bez-prowizji-ID4zZ7B
+   (Czekam 63.0s...)
+[20/2040] -ogrod-garaz-ID4ojxr
+   (Czekam 69.9s...)
+[21/2040] dla-studenta-ID4xZqB
+   (Czekam 47.0s...)
+[22/2040] zym-balkonem-ID4A16j
+   (Czekam 56.5s...)
+[23/2040] a-3-pok-76m2-ID4A18B
+   (Czekam 58.3s...)
+[24/2040] yjazni-garaz-ID3C9ek
+   (Czekam 67.4s...)
+[25/2040] um-wroclawia-ID4A17c
+   (Czekam 72.0s...)
+[26/2040] l-sterowcowa-ID3fbvS
+   (Czekam 73.8s...)
+[27/2040] nczone-garaz-ID4A14S
+   (Czekam 65.5s...)
+[28/2040] as-promenady-ID4A14n
+   (Czekam 71.9s...)
+[29/2040] oje-od-zaraz-ID4A13q
+   (Czekam 84.4s...)
+[30/2040] sokie-sufity-ID4A12G
+   (Czekam 74.7s...)
+[31/2040] ile-widziane-ID4zoCt
+   (Czekam 74.7s...)
+[32/2040] -po-remoncie-ID4A11b
+   (Czekam 83.5s...)
+[33/2040] calosc-2-pok-ID4A0Z8
+   (Czekam 70.0s...)
+[34/2040] -olbin-ciche-ID4mmp1
+   (Czekam 79.4s...)
+[35/2040] rum-dla-pary-ID4A0XJ
+   (Czekam 64.7s...)
+[36/2040] z-ul-krzycka-ID4A0Xu
+   (Czekam 49.7s...)
+[37/2040] ysoki-parter-ID4A0VO
+   (Czekam 63.6s...)
+[38/2040] iskie-oplaty-ID4zWtZ
+   (Czekam 83.3s...)
+[39/2040] ca-p-3pokoje-ID4zisY
+   (Czekam 48.2s...)
+[40/2040] cia-od-zaraz-ID4l17s
+   (Czekam 62.0s...)
+[41/2040] e-budownictw-ID4A0W3
+   (Czekam 48.4s...)
+[42/2040] dre-3-pokoje-ID4r5Qi
+   (Czekam 72.9s...)
+[main bce6529] RPi: Nowe dane szczegółowe [2026-02-09 22:09]
+ 1 file changed, 37 insertions(+)
+Pobieram ewentualne zmiany z VPS...
+error: nie można wykonać zaciągnij z przestawieniem: masz nieprzygotowane zmiany.
+error: Złóż je lub dodaj do schowka.
+Wysyłam do GitHub...
+To github.com:krybojda/Scraping_wro.git
+   7680a57..bce6529  main -> main
+=== KONIEC: pon, 9 lut 2026, 22:09:26 CET ===
