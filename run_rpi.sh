@@ -18,11 +18,21 @@ python3 processor.py >> $LOGfile 2>&1
 # 5. Wyślij bazę danych (Master File)
 git add mieszkania_complete.csv >> $LOGfile 2>&1
 
+# Sprawdzamy czy są w ogóle jakieś zmiany do wysłania
 if git diff --staged --quiet; then
-    echo "Brak zmian w bazie danych." >> $LOGfile
+    echo "Brak zmian w bazie danych. Nie wysyłam." >> $LOGfile
 else
-    git commit -m "RPi: Nowe dane szczegółowe" >> $LOGfile 2>&1
+    # 1. Zrób Commit lokalnie (Zapisz u siebie)
+    git commit -m "RPi: Nowe dane szczegółowe [$(date +'%Y-%m-%d %H:%M')]" >> $LOGfile 2>&1
+    
+    # 2. POBIERZ ZMIANY Z VPS (To jest ten magiczny fix!)
+    # --rebase sprawia, że Twoje zmiany zostaną nałożone "na wierzch" zmian z VPS
+    echo "Pobieram ewentualne zmiany z VPS..." >> $LOGfile
+    git pull --rebase origin main >> $LOGfile 2>&1
+    
+    # 3. Wyślij wszystko do chmury
+    echo "Wysyłam do GitHub..." >> $LOGfile
     git push origin main >> $LOGfile 2>&1
 fi
 
-echo "=== KONIEC ===" >> $LOGfile
+echo "=== KONIEC: $(date) ===" >> $LOGfile

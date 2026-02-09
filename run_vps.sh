@@ -17,9 +17,24 @@ git pull --rebase origin main >> scraper.log 2>&1
 docker compose up --build >> scraper_output.log 2>&1
 
 # 4. Wyślij wyniki (mieszkania_vps.csv) do repozytorium
-git add mieszkania_vps.csv >> scraper.log 2>&1
-git commit -m "Auto-update VPS: $(date +'%Y-%m-%d')" >> scraper.log 2>&1
-git push origin main >> scraper.log 2>&1
+# Przechodzimy do folderu (na wszelki wypadek)
+cd "$(dirname "$0")"
 
-# Logowanie końca
-echo "--- KONIEC: $(date) ---" >> scraper.log
+# Dodajemy plik wygenerowany przez VPS
+git add mieszkania_vps.csv
+
+# Sprawdzamy czy są zmiany
+if git diff --staged --quiet; then
+    echo "VPS: Brak nowych linków. Nie wysyłam."
+else
+    # 1. Zapisz zmiany u siebie (lokalnie na VPS)
+    git commit -m "VPS: Nowe linki [$(date +'%Y-%m-%d %H:%M')]"
+    
+    # 2. POBIERZ ZMIANY Z RPi / GITHUB ACTIONS (Kluczowy moment!)
+    echo "VPS: Pobieram zmiany z serwera (Rebase)..."
+    git pull --rebase origin main
+    
+    # 3. Wyślij połączone zmiany
+    echo "VPS: Wysyłam do GitHub..."
+    git push origin main
+fi
