@@ -1,4 +1,4 @@
-import pandas as pd
+﻿import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import time
@@ -38,7 +38,7 @@ def send_discord_alert(offer, type="Nowa oferta"):
     if "TWOJ_ID" in DISCORD_URL: return 
     color = 5814783 if type == "Nowa oferta" else 16776960
     embed = {
-        "title": f"🏠 {type}: {offer.get('tytul', 'Ogłoszenie')}",
+        "title": f"🔔 {type}: {offer.get('tytul', 'Ogłoszenie')}",
         "url": offer['link'],
         "color": color, 
         "fields": [
@@ -116,7 +116,7 @@ def loc_to_str(loc) -> str:
     return as_str(loc)
 
 def load_csv_safe(path):
-    """Robust reader: 5 kolumn (data, tytul, cena, metraz, link) nawet gdy tytuł ma nie-quoted przecinki."""
+    """Robust reader: 5 kolumn (data, tytuł, cena, metraż, link) nawet gdy tytuł ma nie-quoted przecinki."""
     rows = []
     stats = {"total": 0, "kept": 0, "skip_no_link": 0, "skip_short": 0}
 
@@ -219,9 +219,17 @@ def get_full_details_json(url):
                 {
                     "central heating": "centralne",
                     "district heating": "miejskie",
+                    "central": "centralne",
+                    "urban": "miejskie",
+                    "urban heating": "miejskie",
+                    "individual_gas": "gazowe",
+                    "individual gas": "gazowe",
+                    "individual electric": "elektryczne",
                     "gas": "gazowe",
                     "electric": "elektryczne",
                     "oil": "olejowe",
+                    "boiler_room": "kotłownia",
+                    "heat_pump": "pompa ciepła",
                     "coal": "węglowe",
                     "other": "inne",
                 },
@@ -232,15 +240,23 @@ def get_full_details_json(url):
                 get_from_chars(chars, {'construction_status', 'condition', 'state'}) or get_from_target(target, ['Construction_status', 'construction_status', 'condition', 'state']),
                 {
                     "ready to move in": "do zamieszkania",
+                    "ready_to_use": "do zamieszkania",
+                    "ready_to_move_in": "do zamieszkania",
                     "do zamieszkania": "do zamieszkania",
                     "developer's standard": "deweloperski",
                     "developer standard": "deweloperski",
+                    "development": "deweloperski",
                     "very good": "bardzo dobry",
                     "good": "dobry",
+                    "after_renovation": "po remoncie",
                     "after renovation": "po remoncie",
+                    "for_renovation": "do remontu",
                     "to renovate": "do remontu",
+                    "for_refreshment": "do odświeżenia",
                     "to refresh": "do odświeżenia",
+                    "for_finish": "do wykończenia",
                     "shell condition": "stan surowy",
+                    "raw_state": "stan surowy",
                 },
             ),
             'lokalizacja': lokalizacja,
@@ -252,16 +268,16 @@ def get_full_details_json(url):
         return None
 
 def main():
-    print("--- START RPi PROCESSOR (Naprawiona Kolejność) ---")
+    print("--- START RPi PROCESSOR (Naprawiona KolejnoĹ›Ä‡) ---")
 
     dfs = []
     if os.path.exists(FILE_GH): 
         try: dfs.append(load_csv_safe(FILE_GH))
         except Exception as e: 
-            print(f"Nie mogę wczytać {FILE_GH}: {e}")
+            print(f"Nie mogÄ™ wczytaÄ‡ {FILE_GH}: {e}")
     if os.path.exists(FILE_VPS): 
         try: dfs.append(load_csv_safe(FILE_VPS))
-        except Exception as e:
+        except Exception as e: 
             print(f"Nie mogę wczytać {FILE_VPS}: {e}")
     
     # Upewnij się, że MASTER_FILE istnieje (pusty z nagłówkiem), żeby git add nie wywalał się przy braku ofert
@@ -313,7 +329,7 @@ def main():
         
         if details:
             full_record = {**row, **details}
-            # Nie duplikuj metrażu: jeśli powierzchnia = metraż, zostaw tylko metraż
+            # Nie duplikuj metraĹĽu: jeĹ›li powierzchnia = metraĹĽ, zostaw tylko metraĹĽ
             try:
                 metraz_val = clean_number(full_record.get('metraz', ''))
                 pow_val = clean_number(full_record.get('powierzchnia', ''))
@@ -330,16 +346,16 @@ def main():
         # ZAPIS Z FILTROWANIEM KOLUMN
         if new_records:
             df_new = pd.DataFrame(new_records)
-            # 1. Usuń kolumnę pomocniczą typ_akcji, żeby nie psuła pliku
+            # 1. UsuĹ„ kolumnÄ™ pomocniczÄ… typ_akcji, ĹĽeby nie psuĹ‚a pliku
             if 'typ_akcji' in df_new.columns:
                 df_new = df_new.drop(columns=['typ_akcji'])
             
-            # 2. Uzupełnij brakujące kolumny (jeśli jakiejś brakuje)
+            # 2. UzupeĹ‚nij brakujÄ…ce kolumny (jeĹ›li jakiejĹ› brakuje)
             for col in FINAL_COLUMNS:
                 if col not in df_new.columns:
                     df_new[col] = ""
 
-            # 3. Posortuj kolumny wg ustalonej kolejności
+            # 3. Posortuj kolumny wg ustalonej kolejnoĹ›ci
             df_new = df_new[FINAL_COLUMNS]
 
             exists = os.path.exists(MASTER_FILE)
@@ -348,3 +364,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
