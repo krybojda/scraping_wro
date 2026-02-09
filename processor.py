@@ -116,55 +116,44 @@ def loc_to_str(loc) -> str:
     return as_str(loc)
 
 def load_csv_safe(path):
-    """Wczytuje CSV nawet gdy tytuły mają nie-quoted przecinki. Zakłada, że link to pełny URL w wierszu."""
+    """Robust reader: 5 kolumn (data, tytul, cena, metraz, link) nawet gdy tytuł ma nie-quoted przecinki."""
     rows = []
     if not os.path.exists(path):
         return pd.DataFrame(columns=['data_pobrania','tytul','cena','metraz','link'])
 
-    with open(path, encoding="utf-8", errors="ignore") as f:
-        for line in f:
-            if not line.strip():
+    with open(path, newline="", encoding="utf-8", errors="ignore") as f:
+        reader = csv.reader(f, delimiter=",", quotechar='"', escapechar='\\')
+        for row in reader:
+            if not row or all(not c.strip() for c in row):
                 continue
-            if line.lower().startswith("data_pobrania"):
-                continue  # nagłówek
-
-            # znajdź URL (ostatnie pole)
-            m = re.search(r'https?://\S+', line)
-            if not m:
+            if row[0].strip().lower() == "data_pobrania":
                 continue
-            url = m.group(0).strip()
+            row = [c.strip() for c in row]
 
-            # usuń URL z linii
-            line_no_url = line.replace(url, "").rstrip(",\n\r ")
-
-            try:
-                parts = next(csv.reader([line_no_url]))
-            except Exception:
-                parts = line_no_url.split(",")
-
-            if len(parts) < 2:
+            link = row[-1] if row else ""
+            if not link.startswith("http"):
                 continue
 
-            data_pobrania = parts[0].strip()
-            cena = ""
-            metraz = ""
-            if len(parts) >= 4:
-                # data, ...tytuł..., cena, metraz
-                cena = parts[-2].strip()
-                metraz = parts[-1].strip()
-                tytul = ",".join(parts[1:-2]).strip()
-            elif len(parts) == 3:
-                tytul = parts[1].strip()
-                cena = parts[2].strip()
-            else:  # len == 2
-                tytul = parts[1].strip()
+            if len(row) >= 5:
+                data_pobrania = row[0]
+                cena = row[-3]
+                metraz = row[-2]
+                tytul = ",".join(row[1:-3]) if len(row) > 5 else row[1]
+            elif len(row) == 4:
+                data_pobrania, tytul, cena = row[0], row[1], row[2]
+                metraz = ""
+            elif len(row) == 3:
+                data_pobrania, tytul = row[0], row[1]
+                cena, metraz = row[2], ""
+            else:
+                continue
 
             rows.append({
                 'data_pobrania': data_pobrania,
                 'tytul': tytul,
                 'cena': cena,
                 'metraz': metraz,
-                'link': url
+                'link': link
             })
 
     return pd.DataFrame(rows, columns=['data_pobrania','tytul','cena','metraz','link'])
