@@ -44,6 +44,30 @@ def send_discord_alert(offer, type="Nowa oferta"):
         requests.post(DISCORD_URL, json={"embeds": [embed]})
     except: pass
 
+def normalize_value(val):
+    """Convert API field to plain string."""
+    if val is None:
+        return ""
+    if isinstance(val, (list, tuple)):
+        return ", ".join([str(v) for v in val if v not in (None, "")])
+    return str(val).strip()
+
+def get_from_chars(chars, keys):
+    """Read characteristic list (otodom) in a case-insensitive way."""
+    for char in chars:
+        if char.get('key') in keys:
+            for field in ('localizedValue', 'valueLabel', 'value', 'formattedValue'):
+                if char.get(field):
+                    return normalize_value(char[field])
+    return ""
+
+def get_from_target(target, keys):
+    """Fallback: direct lookup in target dict."""
+    for key in keys:
+        if key in target and target[key] not in (None, "", []):
+            return normalize_value(target[key])
+    return ""
+
 def get_full_details_json(url):
     try:
         sleep_time = random.uniform(45, 90)
@@ -62,25 +86,28 @@ def get_full_details_json(url):
         ad_data = json_data['props']['pageProps']['ad']
         target = ad_data['target']
 
-        def get_char(key):
-            for char in target.get('Characteristics', []):
-                if char.get('key') == key:
-                    return char.get('localizedValue')
-            return ""
+        chars = target.get('characteristics') or target.get('Characteristics') or []
 
-        loc_list = ad_data.get('location', {}).get('geoLocation', {}).get('breadcrumbs', [])
-        lokalizacja = ", ".join([l.get('fullName') for l in loc_list])
+        loc_obj = ad_data.get('location', {})
+        geo = loc_obj.get('geoLocation') or loc_obj.get('address') or {}
+        breadcrumbs = geo.get('breadcrumbs') or []
+        lokalizacja = ", ".join(
+            [loc.get('fullName') or loc.get('name') or loc.get('label', '') for loc in breadcrumbs if loc]
+        )
+        if not lokalizacja:
+            addr = loc_obj.get('address', {})
+            lokalizacja = addr.get('cityWithDistrict') or addr.get('city') or addr.get('region') or ""
 
         return {
-            'czynsz': get_char('rent'),
-            'pietro': get_char('floor_no'),
-            'rok_budowy': get_char('build_year'),
-            'ogrzewanie': get_char('heating'),
-            'kaucja': get_char('security_security'),
-            'pokoje': target.get('Rooms_num', ''),
-            'stan': get_char('construction_status'),
+            'czynsz': get_from_chars(chars, {'rent', 'fee'}) or get_from_target(target, ['Rent', 'rent', 'estateRent']),
+            'pietro': get_from_chars(chars, {'floor_no', 'floor'}) or get_from_target(target, ['Floor_no', 'floor_no', 'floor']),
+            'rok_budowy': get_from_chars(chars, {'build_year', 'year_built'}) or get_from_target(target, ['Build_year', 'build_year']),
+            'ogrzewanie': get_from_chars(chars, {'heating'}) or get_from_target(target, ['Heating', 'heating']),
+            'kaucja': get_from_chars(chars, {'deposit', 'security', 'security_deposit', 'security_security'}) or get_from_target(target, ['Deposit', 'security_deposit', 'security_security']),
+            'pokoje': get_from_target(target, ['Rooms_num', 'rooms']),
+            'stan': get_from_chars(chars, {'construction_status', 'condition'}) or get_from_target(target, ['Construction_status', 'construction_status']),
             'lokalizacja': lokalizacja,
-            'powierzchnia': target.get('Area', ''), 
+            'powierzchnia': get_from_target(target, ['Area', 'area']), 
             'data_aktualizacji': datetime.now().strftime("%Y-%m-%d")
         }
     except Exception as e:
