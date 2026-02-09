@@ -18,20 +18,20 @@ DISCORD_URL = "https://discord.com/api/webhooks/1470223047867764800/m08l3piGAiD5
 
 ua = UserAgent()
 
-def send_discord_alert(offer):
+def send_discord_alert(offer, type="Nowa oferta"):
     """Wysyła ładne powiadomienie na Discord"""
     if "TWOJ_ID" in DISCORD_URL: return 
 
+    color = 5814783 if type == "Nowa oferta" else 16776960 # Zielony dla nowych, Żółty dla zmian
+
     embed = {
-        "title": f"🏠 {offer.get('tytul', 'Nowa oferta')}",
+        "title": f"🏠 {type}: {offer.get('tytul', 'Ogłoszenie')}",
         "url": offer['link'],
-        "color": 5814783, 
+        "color": color, 
         "fields": [
             {"name": "Cena", "value": f"{offer.get('cena', '?')} zł", "inline": True},
             {"name": "Czynsz", "value": f"{offer.get('czynsz', '?')}", "inline": True},
             {"name": "Metraż", "value": f"{offer.get('powierzchnia', '?')} m²", "inline": True},
-            {"name": "Pokoje", "value": f"{offer.get('pokoje', '?')}", "inline": True},
-            {"name": "Piętro", "value": f"{offer.get('pietro', '?')}", "inline": True},
             {"name": "Lokalizacja", "value": f"{offer.get('lokalizacja', '?')}", "inline": False}
         ],
         "footer": {"text": "Bot Nieruchomości RPi"}
@@ -46,13 +46,9 @@ def send_discord_alert(offer):
 def get_full_details_json(url):
     """Pobiera głębokie dane (JSON) z rotacją UA i DŁUGIM czasem oczekiwania"""
     try:
-        # --- ZMIANA NA ULTRA-BEZPIECZNE CZASY ---
-        # Losuje przerwę między 45 a 90 sekund. 
-        # Średnio minuta na ogłoszenie. Wygląda jak czytanie ze zrozumieniem.
         sleep_time = random.uniform(45, 90)
-        print(f"   (Czekam {sleep_time:.1f}s dla niepoznaki...)") 
+        print(f"   (Czekam {sleep_time:.1f}s...)") 
         time.sleep(sleep_time)
-        # ----------------------------------------
         
         headers = {'User-Agent': ua.random, 'Accept-Language': 'pl-PL'}
         resp = requests.get(url, headers=headers)
@@ -95,16 +91,15 @@ def get_full_details_json(url):
         return None
 
 def main():
-    print("--- START RPi PROCESSOR (Tryb Ultra-Safe) ---")
+    print("--- START RPi PROCESSOR (Tryb: Inteligentna Aktualizacja) ---")
 
-    # 1. Łączenie danych z VPS i GH
+    # 1. Łączenie danych z VPS i GH (z naprawą błędów CSV)
     dfs = []
-    # Wczytywanie z obsługą błędów pustych plików
     if os.path.exists(FILE_GH): 
-        try: dfs.append(pd.read_csv(FILE_GH))
+        try: dfs.append(pd.read_csv(FILE_GH, on_bad_lines='skip'))
         except: pass
     if os.path.exists(FILE_VPS): 
-        try: dfs.append(pd.read_csv(FILE_VPS))
+        try: dfs.append(pd.read_csv(FILE_VPS, on_bad_lines='skip'))
         except: pass
         
     if not dfs:
@@ -112,25 +107,51 @@ def main():
         return
 
     df_raw = pd.concat(dfs, ignore_index=True)
+    # Usuwamy duplikaty wewnątrz plików wejściowych
     df_unique = df_raw.drop_duplicates(subset='link', keep='last')
 
-    # 2. Co już mamy?
-    processed_links = []
+    # 2. Wczytanie starej bazy do słownika {link: cena}
+    processed_prices = {}
     if os.path.exists(MASTER_FILE):
         try:
             df_master = pd.read_csv(MASTER_FILE)
-            if 'link' in df_master.columns:
-                processed_links = df_master['link'].tolist()
+            if 'link' in df_master.columns and 'cena' in df_master.columns:
+                # Tworzymy słownik {link: "1234 zł"}
+                processed_prices = pd.Series(df_master.cena.values, index=df_master.link).to_dict()
         except: pass
 
-    # 3. Co trzeba pobrać?
-    links_to_do = df_unique[~df_unique['link'].isin(processed_links)].to_dict('records')
-    total = len(links_to_do)
-    print(f"Znaleziono {total} nowych ogłoszeń do przetworzenia.")
+    # 3. Wybór ogłoszeń do przetworzenia
+    links_to_do = []
+    
+    for record in df_unique.to_dict('records'):
+        link = record['link']
+        new_price = str(record.get('cena', '')).strip()
+        
+        # Jeśli linku nie ma w bazie -> NOWE
+        if link not in processed_prices:
+            record['typ_akcji'] = "NOWE"
+            links_to_do.append(record)
+        
+        # Jeśli link jest, ale cena inna -> AKTUALIZACJA
+        else:
+            old_price = str(processed_prices[link]).strip()
+            # Proste porównanie napisów (np. "2500 zł" vs "2500")
+            # Czyścimy spacje i "zł" dla pewności
+            np_clean = new_price.replace(' ', '').replace('zł', '')
+            op_clean = old_price.replace(' ', '').replace('zł', '')
+            
+            if np_clean != op_clean and np_clean and op_clean:
+                record['typ_akcji'] = "ZMIANA CENY"
+                print(f"(!) Zmiana ceny dla {link[-15:]}: {old_price} -> {new_price}")
+                links_to_do.append(record)
 
+    total = len(links_to_do)
+    print(f"Znaleziono {total} ogłoszeń (Nowe + Zmiany cen). Pominięto {len(df_unique) - total} bez zmian.")
+
+    # 4. Przetwarzanie
     new_records = []
     for i, row in enumerate(links_to_do):
-        print(f"[{i+1}/{total}] Przetwarzam: {row['link'][-20:]}")
+        print(f"[{i+1}/{total}] [{row['typ_akcji']}] {row['link'][-20:]}")
         
         details = get_full_details_json(row['link'])
         
@@ -138,19 +159,17 @@ def main():
             full_record = {**row, **details}
             new_records.append(full_record)
             
-            # Warunek Discorda (np. cena > 0 żeby odsiać błędy)
+            # Discord - wyślij powiadomienie
             try:
-                cena_clean = float(str(row.get('cena', '0')).replace(' ', '').replace(',', '.'))
-                if cena_clean > 0: 
-                    send_discord_alert(full_record)
+                msg_type = "Nowa oferta" if row['typ_akcji'] == "NOWE" else "📉 Zmiana ceny"
+                send_discord_alert(full_record, type=msg_type)
             except: pass
         
-        # Zapis co 1 rekord - przy tak wolnym tempie (co minutę)
-        # lepiej zapisywać od razu, żeby nic nie stracić.
+        # Zapisz od razu do CSV
         df_new = pd.DataFrame(new_records)
         exists = os.path.exists(MASTER_FILE)
         df_new.to_csv(MASTER_FILE, mode='a', header=not exists, index=False)
-        new_records = [] # Czyścimy bufor po zapisie
+        new_records = [] 
 
 if __name__ == "__main__":
     main()
