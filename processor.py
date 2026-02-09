@@ -21,7 +21,9 @@ DISCORD_URL = "https://discord.com/api/webhooks/1470223047867764800/m08l3piGAiD5
 
 
 ua = UserAgent()
+  
 
+  
 # Definiujemy stałą kolejność kolumn w pliku, żeby nic się nie przesuwało
 FINAL_COLUMNS = [
     'data_pobrania', 'tytul', 'cena', 'link', 'metraz', 
