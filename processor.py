@@ -144,9 +144,15 @@ def get_full_details_json(url):
         if city:
             addr_str = (addr_str + ", " + city).strip(", ")
 
-        lokalizacja = addr_str if addr_str else ", ".join(
-            [loc_to_str(loc) for loc in breadcrumbs if loc_to_str(loc)]
-        )
+        if addr_str:
+            lokalizacja = addr_str
+        else:
+            loc_parts = []
+            for loc in breadcrumbs:
+                s = loc_to_str(loc)
+                if s:
+                    loc_parts.append(str(s))
+            lokalizacja = ", ".join(loc_parts)
 
         area_val = clean_number(get_from_target(target, ['Area', 'area']))
 
@@ -201,7 +207,11 @@ def main():
     if os.path.exists(FILE_VPS): 
         try: dfs.append(pd.read_csv(FILE_VPS, on_bad_lines='skip'))
         except: pass
-        
+    
+    # Upewnij się, że MASTER_FILE istnieje (pusty z nagłówkiem), żeby git add nie wywalał się przy braku ofert
+    if not os.path.exists(MASTER_FILE):
+        pd.DataFrame(columns=FINAL_COLUMNS).to_csv(MASTER_FILE, index=False)
+
     if not dfs: return
 
     df_raw = pd.concat(dfs, ignore_index=True)
