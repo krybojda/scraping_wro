@@ -68,6 +68,32 @@ def get_from_target(target, keys):
             return normalize_value(target[key])
     return ""
 
+def polish_floor(val: str) -> str:
+    txt = (val or "").lower()
+    if not txt:
+        return ""
+    if "parter" in txt or "ground" in txt:
+        return "0"
+    import re
+    m = re.search(r"\d+", txt)
+    return m.group(0) if m else ""
+
+def translate_polish(value: str, mapping: dict) -> str:
+    if not value:
+        return ""
+    lower = value.lower()
+    if lower in mapping:
+        return mapping[lower]
+    return value  # assume already PL
+
+def clean_number(txt: str) -> str:
+    """Pick out first numeric part (e.g., '45 m²' -> '45')."""
+    if not txt:
+        return ""
+    import re
+    m = re.search(r"[0-9]+(?:[\\.,][0-9]+)?", str(txt))
+    return m.group(0).replace(',', '.') if m else ""
+
 def get_full_details_json(url):
     try:
         sleep_time = random.uniform(45, 90)
@@ -91,23 +117,56 @@ def get_full_details_json(url):
         loc_obj = ad_data.get('location', {})
         geo = loc_obj.get('geoLocation') or loc_obj.get('address') or {}
         breadcrumbs = geo.get('breadcrumbs') or []
-        lokalizacja = ", ".join(
+        addr = loc_obj.get('address', {})
+        street = addr.get('street', '') or addr.get('route', '')
+        number = addr.get('streetNumber', '') or addr.get('street_number', '')
+        city = addr.get('cityWithDistrict') or addr.get('city') or addr.get('region') or ""
+
+        addr_str = " ".join([street, number]).strip()
+        if city:
+            addr_str = (addr_str + ", " + city).strip(", ")
+
+        lokalizacja = addr_str if addr_str else ", ".join(
             [loc.get('fullName') or loc.get('name') or loc.get('label', '') for loc in breadcrumbs if loc]
         )
-        if not lokalizacja:
-            addr = loc_obj.get('address', {})
-            lokalizacja = addr.get('cityWithDistrict') or addr.get('city') or addr.get('region') or ""
+
+        area_val = clean_number(get_from_target(target, ['Area', 'area']))
 
         return {
             'czynsz': get_from_chars(chars, {'rent', 'fee'}) or get_from_target(target, ['Rent', 'rent', 'estateRent']),
-            'pietro': get_from_chars(chars, {'floor_no', 'floor'}) or get_from_target(target, ['Floor_no', 'floor_no', 'floor']),
+            'pietro': polish_floor(get_from_chars(chars, {'floor_no', 'floor'}) or get_from_target(target, ['Floor_no', 'floor_no', 'floor'])),
             'rok_budowy': get_from_chars(chars, {'build_year', 'year_built'}) or get_from_target(target, ['Build_year', 'build_year']),
-            'ogrzewanie': get_from_chars(chars, {'heating'}) or get_from_target(target, ['Heating', 'heating']),
+            'ogrzewanie': translate_polish(
+                get_from_chars(chars, {'heating'}) or get_from_target(target, ['Heating', 'heating']),
+                {
+                    "central heating": "centralne",
+                    "district heating": "miejskie",
+                    "gas": "gazowe",
+                    "electric": "elektryczne",
+                    "oil": "olejowe",
+                    "coal": "węglowe",
+                    "other": "inne",
+                },
+            ),
             'kaucja': get_from_chars(chars, {'deposit', 'security', 'security_deposit', 'security_security'}) or get_from_target(target, ['Deposit', 'security_deposit', 'security_security']),
             'pokoje': get_from_target(target, ['Rooms_num', 'rooms']),
-            'stan': get_from_chars(chars, {'construction_status', 'condition'}) or get_from_target(target, ['Construction_status', 'construction_status']),
+            'stan': translate_polish(
+                get_from_chars(chars, {'construction_status', 'condition', 'state'}) or get_from_target(target, ['Construction_status', 'construction_status', 'condition', 'state']),
+                {
+                    "ready to move in": "do zamieszkania",
+                    "do zamieszkania": "do zamieszkania",
+                    "developer's standard": "deweloperski",
+                    "developer standard": "deweloperski",
+                    "very good": "bardzo dobry",
+                    "good": "dobry",
+                    "after renovation": "po remoncie",
+                    "to renovate": "do remontu",
+                    "to refresh": "do odświeżenia",
+                    "shell condition": "stan surowy",
+                },
+            ),
             'lokalizacja': lokalizacja,
-            'powierzchnia': get_from_target(target, ['Area', 'area']), 
+            'powierzchnia': area_val,
             'data_aktualizacji': datetime.now().strftime("%Y-%m-%d")
         }
     except Exception as e:
@@ -164,6 +223,14 @@ def main():
         
         if details:
             full_record = {**row, **details}
+            # Nie duplikuj metrażu: jeśli powierzchnia = metraż, zostaw tylko metraż
+            try:
+                metraz_val = clean_number(full_record.get('metraz', ''))
+                pow_val = clean_number(full_record.get('powierzchnia', ''))
+                if metraz_val and pow_val and metraz_val == pow_val:
+                    full_record['powierzchnia'] = ""
+            except:
+                pass
             new_records.append(full_record)
             try:
                 msg_type = "Nowa oferta" if row.get('typ_akcji') == "NOWE" else "📉 Zmiana ceny"
