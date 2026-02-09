@@ -115,6 +115,28 @@ def clean_number(txt: str) -> str:
 def loc_to_str(loc) -> str:
     return as_str(loc)
 
+def fill_defaults(rec: dict) -> dict:
+    """Uzupełnia brakujące pola sensownymi wartościami."""
+    # jeśli brak powierzchni, a jest metraż – użyj metrażu
+    if not rec.get('powierzchnia') and rec.get('metraz'):
+        rec['powierzchnia'] = rec['metraz']
+
+    defaults = {
+        'rok_budowy': 'brak',
+        'ogrzewanie': 'brak',
+        'kaucja': 'brak',
+        'stan': 'brak',
+        'czynsz': '0',
+        'pietro': 'brak',
+        'pokoje': 'brak',
+        'lokalizacja': 'brak',
+        'powierzchnia': 'brak',
+    }
+    for col, val in defaults.items():
+        if rec.get(col) in ("", None):
+            rec[col] = val
+    return rec
+
 def load_csv_safe(path):
     """Robust reader: 5 kolumn (data, tytuł, cena, metraż, link) nawet gdy tytuł ma nie-quoted przecinki."""
     rows = []
@@ -337,6 +359,7 @@ def main():
                     full_record['powierzchnia'] = ""
             except:
                 pass
+            full_record = fill_defaults(full_record)
             new_records.append(full_record)
             try:
                 msg_type = "Nowa oferta" if row.get('typ_akcji') == "NOWE" else "📉 Zmiana ceny"
