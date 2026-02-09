@@ -18,12 +18,17 @@ DISCORD_URL = "https://discord.com/api/webhooks/1470223047867764800/m08l3piGAiD5
 
 ua = UserAgent()
 
+# Definiujemy stałą kolejność kolumn w pliku, żeby nic się nie przesuwało
+FINAL_COLUMNS = [
+    'data_pobrania', 'tytul', 'cena', 'link', 'metraz', 
+    'czynsz', 'pietro', 'pokoje', 'lokalizacja', 
+    'rok_budowy', 'ogrzewanie', 'kaucja', 'stan', 
+    'powierzchnia', 'data_aktualizacji'
+]
+
 def send_discord_alert(offer, type="Nowa oferta"):
-    """Wysyła ładne powiadomienie na Discord"""
     if "TWOJ_ID" in DISCORD_URL: return 
-
-    color = 5814783 if type == "Nowa oferta" else 16776960 # Zielony dla nowych, Żółty dla zmian
-
+    color = 5814783 if type == "Nowa oferta" else 16776960
     embed = {
         "title": f"🏠 {type}: {offer.get('tytul', 'Ogłoszenie')}",
         "url": offer['link'],
@@ -31,20 +36,15 @@ def send_discord_alert(offer, type="Nowa oferta"):
         "fields": [
             {"name": "Cena", "value": f"{offer.get('cena', '?')} zł", "inline": True},
             {"name": "Czynsz", "value": f"{offer.get('czynsz', '?')}", "inline": True},
-            {"name": "Metraż", "value": f"{offer.get('powierzchnia', '?')} m²", "inline": True},
             {"name": "Lokalizacja", "value": f"{offer.get('lokalizacja', '?')}", "inline": False}
         ],
         "footer": {"text": "Bot Nieruchomości RPi"}
     }
-    
-    payload = {"embeds": [embed]}
     try:
-        requests.post(DISCORD_URL, json=payload)
-    except Exception as e:
-        print(f"Błąd Discorda: {e}")
+        requests.post(DISCORD_URL, json={"embeds": [embed]})
+    except: pass
 
 def get_full_details_json(url):
-    """Pobiera głębokie dane (JSON) z rotacją UA i DŁUGIM czasem oczekiwania"""
     try:
         sleep_time = random.uniform(45, 90)
         print(f"   (Czekam {sleep_time:.1f}s...)") 
@@ -52,12 +52,10 @@ def get_full_details_json(url):
         
         headers = {'User-Agent': ua.random, 'Accept-Language': 'pl-PL'}
         resp = requests.get(url, headers=headers)
-        
         if resp.status_code != 200: return None
         
         soup = BeautifulSoup(resp.content, 'html.parser')
         data_script = soup.find('script', id='__NEXT_DATA__')
-        
         if not data_script: return None
         
         json_data = json.loads(data_script.string)
@@ -70,7 +68,6 @@ def get_full_details_json(url):
                     return char.get('localizedValue')
             return ""
 
-        # Budowanie lokalizacji
         loc_list = ad_data.get('location', {}).get('geoLocation', {}).get('breadcrumbs', [])
         lokalizacja = ", ".join([l.get('fullName') for l in loc_list])
 
@@ -91,9 +88,8 @@ def get_full_details_json(url):
         return None
 
 def main():
-    print("--- START RPi PROCESSOR (Tryb: Inteligentna Aktualizacja) ---")
+    print("--- START RPi PROCESSOR (Naprawiona Kolejność) ---")
 
-    # 1. Łączenie danych z VPS i GH (z naprawą błędów CSV)
     dfs = []
     if os.path.exists(FILE_GH): 
         try: dfs.append(pd.read_csv(FILE_GH, on_bad_lines='skip'))
@@ -102,74 +98,69 @@ def main():
         try: dfs.append(pd.read_csv(FILE_VPS, on_bad_lines='skip'))
         except: pass
         
-    if not dfs:
-        print("Brak danych wejściowych.")
-        return
+    if not dfs: return
 
     df_raw = pd.concat(dfs, ignore_index=True)
-    # Usuwamy duplikaty wewnątrz plików wejściowych
     df_unique = df_raw.drop_duplicates(subset='link', keep='last')
 
-    # 2. Wczytanie starej bazy do słownika {link: cena}
     processed_prices = {}
     if os.path.exists(MASTER_FILE):
         try:
             df_master = pd.read_csv(MASTER_FILE)
             if 'link' in df_master.columns and 'cena' in df_master.columns:
-                # Tworzymy słownik {link: "1234 zł"}
                 processed_prices = pd.Series(df_master.cena.values, index=df_master.link).to_dict()
         except: pass
 
-    # 3. Wybór ogłoszeń do przetworzenia
     links_to_do = []
-    
     for record in df_unique.to_dict('records'):
         link = record['link']
         new_price = str(record.get('cena', '')).strip()
         
-        # Jeśli linku nie ma w bazie -> NOWE
         if link not in processed_prices:
             record['typ_akcji'] = "NOWE"
             links_to_do.append(record)
-        
-        # Jeśli link jest, ale cena inna -> AKTUALIZACJA
         else:
             old_price = str(processed_prices[link]).strip()
-            # Proste porównanie napisów (np. "2500 zł" vs "2500")
-            # Czyścimy spacje i "zł" dla pewności
             np_clean = new_price.replace(' ', '').replace('zł', '')
             op_clean = old_price.replace(' ', '').replace('zł', '')
-            
             if np_clean != op_clean and np_clean and op_clean:
                 record['typ_akcji'] = "ZMIANA CENY"
-                print(f"(!) Zmiana ceny dla {link[-15:]}: {old_price} -> {new_price}")
                 links_to_do.append(record)
 
     total = len(links_to_do)
-    print(f"Znaleziono {total} ogłoszeń (Nowe + Zmiany cen). Pominięto {len(df_unique) - total} bez zmian.")
+    print(f"Do przetworzenia: {total}")
 
-    # 4. Przetwarzanie
     new_records = []
     for i, row in enumerate(links_to_do):
-        print(f"[{i+1}/{total}] [{row['typ_akcji']}] {row['link'][-20:]}")
-        
+        print(f"[{i+1}/{total}] {row['link'][-20:]}")
         details = get_full_details_json(row['link'])
         
         if details:
             full_record = {**row, **details}
             new_records.append(full_record)
-            
-            # Discord - wyślij powiadomienie
             try:
-                msg_type = "Nowa oferta" if row['typ_akcji'] == "NOWE" else "📉 Zmiana ceny"
+                msg_type = "Nowa oferta" if row.get('typ_akcji') == "NOWE" else "📉 Zmiana ceny"
                 send_discord_alert(full_record, type=msg_type)
             except: pass
         
-        # Zapisz od razu do CSV
-        df_new = pd.DataFrame(new_records)
-        exists = os.path.exists(MASTER_FILE)
-        df_new.to_csv(MASTER_FILE, mode='a', header=not exists, index=False)
-        new_records = [] 
+        # ZAPIS Z FILTROWANIEM KOLUMN
+        if new_records:
+            df_new = pd.DataFrame(new_records)
+            # 1. Usuń kolumnę pomocniczą typ_akcji, żeby nie psuła pliku
+            if 'typ_akcji' in df_new.columns:
+                df_new = df_new.drop(columns=['typ_akcji'])
+            
+            # 2. Uzupełnij brakujące kolumny (jeśli jakiejś brakuje)
+            for col in FINAL_COLUMNS:
+                if col not in df_new.columns:
+                    df_new[col] = ""
+
+            # 3. Posortuj kolumny wg ustalonej kolejności
+            df_new = df_new[FINAL_COLUMNS]
+
+            exists = os.path.exists(MASTER_FILE)
+            df_new.to_csv(MASTER_FILE, mode='a', header=not exists, index=False)
+            new_records = []
 
 if __name__ == "__main__":
     main()
