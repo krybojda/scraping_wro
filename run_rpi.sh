@@ -3,13 +3,21 @@
 # 1. Przejdź do folderu na pendrivie
 cd /mnt/pendrive/Scraping_wro || exit
 
-# 2. Logi zapisuj do tymczasowej pamięci RAM (/tmp), żeby nie zajechać karty SD/Pendrive'a ciągłym pisaniem
-LOGfile="/tmp/scraper_rpi.log"
+# --- BEZPIECZNY START (Zapisz zamiast kasować) ---
 
-echo "=== START RPi: $(date) ===" >> $LOGfile
+# 1. Najpierw dodaj wszystko, co RPi zdążyło "wymęczyć" przed awarią
+git add mieszkania_complete.csv
 
-# 3. Pobierz nowe dane (lista linków)
-git pull --rebase origin main >> $LOGfile 2>&1
+# 2. Spróbuj zrobić commit (zabezpiecz dane w lokalnej historii)
+# Jeśli nie ma zmian, komenda po "||" sprawi, że skrypt pójdzie dalej bez błędu
+git commit -m "AUTO-SAVE: Odzyskanie danych po przerwaniu skryptu" || echo "Brak niezapisanych zmian - czysto."
+
+# 3. Teraz, gdy zmiany są bezpieczne w "sejfie" (commicie), możesz bezpiecznie pobrać nowości
+# Używamy --rebase, żeby Twoje odzyskane dane zostały "na wierzchu"
+echo "Pobieram nowości z VPS..."
+git pull --rebase origin main
+
+# -------------------------------------------------
 
 # 4. Uruchom procesor (głębokie skrapowanie + discord)
 # Używamy python3 zainstalowanego w systemie
