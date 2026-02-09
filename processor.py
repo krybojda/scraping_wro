@@ -118,13 +118,17 @@ def loc_to_str(loc) -> str:
 def load_csv_safe(path):
     """Robust reader: 5 kolumn (data, tytul, cena, metraz, link) nawet gdy tytuł ma nie-quoted przecinki."""
     rows = []
+    stats = {"total": 0, "kept": 0, "skip_no_link": 0, "skip_short": 0}
+
     if not os.path.exists(path):
         return pd.DataFrame(columns=['data_pobrania','tytul','cena','metraz','link'])
 
     with open(path, newline="", encoding="utf-8", errors="ignore") as f:
         reader = csv.reader(f, delimiter=",", quotechar='"', escapechar='\\')
         for row in reader:
+            stats["total"] += 1
             if not row or all(not c.strip() for c in row):
+                stats["skip_short"] += 1
                 continue
             if row[0].strip().lower() == "data_pobrania":
                 continue
@@ -132,6 +136,7 @@ def load_csv_safe(path):
 
             link = row[-1] if row else ""
             if not link.startswith("http"):
+                stats["skip_no_link"] += 1
                 continue
 
             if len(row) >= 5:
@@ -146,6 +151,7 @@ def load_csv_safe(path):
                 data_pobrania, tytul = row[0], row[1]
                 cena, metraz = row[2], ""
             else:
+                stats["skip_short"] += 1
                 continue
 
             rows.append({
@@ -155,7 +161,9 @@ def load_csv_safe(path):
                 'metraz': metraz,
                 'link': link
             })
+            stats["kept"] += 1
 
+    print(f"[{os.path.basename(path)}] total_lines={stats['total']} kept={stats['kept']} skip_no_link={stats['skip_no_link']} skip_short={stats['skip_short']}")
     return pd.DataFrame(rows, columns=['data_pobrania','tytul','cena','metraz','link'])
 
 def get_full_details_json(url):
