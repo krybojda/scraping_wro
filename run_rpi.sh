@@ -10,7 +10,11 @@ mkdir -p logs  # upewnij się, że folder istnieje
 # --- BEZPIECZNY START (Zapisz zamiast kasować) ---
 
 # 1. Najpierw dodaj wszystko, co RPi zdążyło "wymęczyć" przed awarią
-git add mieszkania_complete.csv
+if [ -f mieszkania_complete.csv ]; then
+    git add mieszkania_complete.csv
+else
+    echo "Brak mieszkania_complete.csv - pomijam git add (przed pull)" >> $LOGfile
+fi
 
 # 2. Spróbuj zrobić commit (zabezpiecz dane w lokalnej historii)
 # Jeśli nie ma zmian, komenda po "||" sprawi, że skrypt pójdzie dalej bez błędu
@@ -28,7 +32,11 @@ git pull --rebase origin main >> $LOGfile 2>&1
 python3 -u processor.py >> $LOGfile 2>&1
 
 # 5. Wyślij bazę danych (Master File)
-git add mieszkania_complete.csv >> $LOGfile 2>&1
+if [ -f mieszkania_complete.csv ]; then
+    git add mieszkania_complete.csv >> $LOGfile 2>&1
+else
+    echo "Brak mieszkania_complete.csv - pomijam git add (po procesie)" >> $LOGfile
+fi
 
 # Sprawdzamy czy są w ogóle jakieś zmiany do wysłania
 if git diff --staged --quiet; then
