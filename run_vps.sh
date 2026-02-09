@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 1. Przejdź do katalogu projektu (ZMIEN TĘ ŚCIEŻKĘ NA SWOJĄ!)
-cd /home/ubuntu/mieszkania-scraper
+cd /home/ubuntu/Scraping_wro
 
 # Logowanie startu
 echo "--- START: $(date) ---" >> scraper.log
