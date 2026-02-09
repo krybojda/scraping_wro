@@ -46,7 +46,7 @@ def make_request(url):
 def get_listing_basic(url):
     """Szybkie pobieranie podstawowych danych (HTML)"""
     try:
-        time.sleep(random.uniform(3, 8))
+        time.sleep(random.uniform(15, 60))  # Dłuższe przerwy między ogłoszeniami
         soup = make_request(url)
         if not soup: return None
         
@@ -104,7 +104,7 @@ def main():
             print(f"Zapisano {len(page_data)} rekordów.")
         
         page += 1
-        time.sleep(random.uniform(2, 5))
+        time.sleep(random.uniform(15, 60))  # Dłuższe przerwy między stronami
 
 if __name__ == "__main__":
     main()
