@@ -34,6 +34,31 @@ FINAL_COLUMNS = [
     'powierzchnia', 'data_aktualizacji'
 ]
 
+def normalize_link(link: str) -> str:
+    """
+    Sprowadza link do jednej postaci, żeby uniknąć duplikatów typu /hpr/pl/oferta i /pl/oferta.
+    - usuwa segment /hpr
+    - wycina querystring i fragment
+    - ucina końcowy slash
+    """
+    if not isinstance(link, str):
+        return ""
+    cleaned = link.strip()
+    cleaned = cleaned.replace("://www.otodom.pl/hpr", "://www.otodom.pl")
+    cleaned = cleaned.split("?", 1)[0].split("#", 1)[0]
+    return cleaned.rstrip("/")
+
+def offer_id_from_link(link: str) -> str:
+    """Wyciąga identyfikator oferty (IDxxxx) z linku, jeśli istnieje."""
+    m = re.search(r"(ID[0-9A-Za-z]+)", link or "", re.IGNORECASE)
+    return m.group(1).upper() if m else ""
+
+def dedupe_key_from_link(link: str) -> str:
+    """Klucz deduplikacji: ID oferty, a gdy go brak – znormalizowany link."""
+    norm = normalize_link(link)
+    oid = offer_id_from_link(norm)
+    return oid or norm
+
 def send_discord_alert(offer, type="Nowa oferta"):
     if "TWOJ_ID" in DISCORD_URL: return 
     color = 5814783 if type == "Nowa oferta" else 16776960
@@ -309,11 +334,16 @@ def main():
     if not dfs: return
 
     df_raw = pd.concat(dfs, ignore_index=True)
-    # ustaw kolejność: najnowsze rekordy na końcu, żeby brać najświeższą cenę per link
+    # unifikacja linków i klucz deduplikacji
+    df_raw['link'] = df_raw['link'].apply(normalize_link)
+    df_raw['dedupe_key'] = df_raw['link'].apply(dedupe_key_from_link)
+
+    # ustaw kolejność: najnowsze rekordy na końcu, żeby brać najświeższą cenę per dedupe_key
     if 'data_pobrania' in df_raw.columns:
         df_raw['__ts'] = pd.to_datetime(df_raw['data_pobrania'], errors='coerce')
         df_raw = df_raw.sort_values('__ts')
-    df_unique = df_raw.drop_duplicates(subset='link', keep='last')
+
+    df_unique = df_raw.drop_duplicates(subset='dedupe_key', keep='last')
     if '__ts' in df_unique.columns:
         df_unique = df_unique.drop(columns='__ts')
 
@@ -322,19 +352,22 @@ def main():
         try:
             df_master = pd.read_csv(MASTER_FILE)
             if 'link' in df_master.columns and 'cena' in df_master.columns:
-                processed_prices = pd.Series(df_master.cena.values, index=df_master.link).to_dict()
+                df_master['link'] = df_master['link'].apply(normalize_link)
+                df_master['dedupe_key'] = df_master['link'].apply(dedupe_key_from_link)
+                processed_prices = pd.Series(df_master.cena.values, index=df_master.dedupe_key).to_dict()
         except: pass
 
     links_to_do = []
     for record in df_unique.to_dict('records'):
         link = record['link']
+        key = record.get('dedupe_key') or dedupe_key_from_link(link)
         new_price = str(record.get('cena', '')).strip()
         
-        if link not in processed_prices:
+        if key not in processed_prices:
             record['typ_akcji'] = "NOWE"
             links_to_do.append(record)
         else:
-            old_price = str(processed_prices[link]).strip()
+            old_price = str(processed_prices[key]).strip()
             np_clean = new_price.replace(' ', '').replace('zł', '')
             op_clean = old_price.replace(' ', '').replace('zł', '')
             if np_clean != op_clean and np_clean and op_clean:
@@ -369,9 +402,10 @@ def main():
         # ZAPIS Z FILTROWANIEM KOLUMN
         if new_records:
             df_new = pd.DataFrame(new_records)
-            # 1. UsuĹ„ kolumnÄ™ pomocniczÄ… typ_akcji, ĹĽeby nie psuĹ‚a pliku
-            if 'typ_akcji' in df_new.columns:
-                df_new = df_new.drop(columns=['typ_akcji'])
+            # 1. Usuń kolumny pomocnicze, żeby nie psuły pliku
+            for aux_col in ('typ_akcji', 'dedupe_key'):
+                if aux_col in df_new.columns:
+                    df_new = df_new.drop(columns=[aux_col])
             
             # 2. UzupeĹ‚nij brakujÄ…ce kolumny (jeĹ›li jakiejĹ› brakuje)
             for col in FINAL_COLUMNS:

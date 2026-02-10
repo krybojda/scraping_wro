@@ -4,3 +4,4 @@ scraper.log
 scraper_output.log
 logs/
 log_*.txt
+__pycache__/
