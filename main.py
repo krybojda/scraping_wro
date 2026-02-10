@@ -22,6 +22,16 @@ BASE_URL = "https://www.otodom.pl/pl/wyniki/wynajem/mieszkanie/dolnoslaskie/wroc
 ua = UserAgent()
 START_TIME = time.time()
 
+def get_public_ip():
+    """Zwraca publiczne IP lub pusty string, gdy nie da się pobrać."""
+    try:
+        resp = requests.get("https://api.ipify.org", timeout=5)
+        if resp.status_code == 200:
+            return resp.text.strip()
+    except Exception:
+        pass
+    return ""
+
 def make_request(url):
     """Pobieranie z rotacją User-Agent"""
     try:
@@ -77,6 +87,11 @@ def get_listing_basic(url):
 
 def main():
     print(f"--- START ZWIADOWCY --- Plik: {FILE_NAME}")
+    ip = get_public_ip()
+    if ip:
+        print(f"Aktualne IP: {ip}")
+    else:
+        print("Aktualne IP: (nie udalo sie pobrac)")
     page = 1
     
     while True:
