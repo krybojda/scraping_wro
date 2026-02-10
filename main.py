@@ -15,6 +15,9 @@ MAX_EXECUTION_TIME = int(os.getenv("MAX_EXECUTION_TIME", 21600))
 
 BASE_URL = "https://www.otodom.pl/pl/wyniki/wynajem/mieszkanie/dolnoslaskie/wroclaw/wroclaw/wroclaw?limit=36&ownerTypeSingleSelect=ALL&by=DEFAULT&direction=DESC&viewType=listing"
 
+
+#test
+
 # Inicjalizacja generatora User-Agent
 ua = UserAgent()
 START_TIME = time.time()
