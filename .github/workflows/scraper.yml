@@ -34,4 +34,5 @@ jobs:
           # Dodajemy i wysyłamy tylko plik dedykowany dla GitHuba
           git add mieszkania_gh.csv
           git commit -m "Auto-update danych z GitHub Actions" || echo "Brak zmian"
+          git pull --rebase origin main
           git push
