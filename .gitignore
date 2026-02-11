@@ -5,3 +5,4 @@ scraper_output.log
 logs/
 log_*.txt
 __pycache__/
+komendy.txt
