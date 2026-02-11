@@ -334,18 +334,9 @@ def main():
     if not dfs: return
 
     df_raw = pd.concat(dfs, ignore_index=True)
-    # unifikacja linków i klucz deduplikacji
+    # unifikacja linków i klucz deduplikacji (kolejność pozostaje jak w plikach)
     df_raw['link'] = df_raw['link'].apply(normalize_link)
     df_raw['dedupe_key'] = df_raw['link'].apply(dedupe_key_from_link)
-
-    # ustaw kolejność: najnowsze rekordy na końcu, żeby brać najświeższą cenę per dedupe_key
-    if 'data_pobrania' in df_raw.columns:
-        df_raw['__ts'] = pd.to_datetime(df_raw['data_pobrania'], errors='coerce')
-        df_raw = df_raw.sort_values('__ts')
-
-    df_unique = df_raw.drop_duplicates(subset='dedupe_key', keep='last')
-    if '__ts' in df_unique.columns:
-        df_unique = df_unique.drop(columns='__ts')
 
     processed_prices = {}
     if os.path.exists(MASTER_FILE):
@@ -357,8 +348,9 @@ def main():
                 processed_prices = pd.Series(df_master.cena.values, index=df_master.dedupe_key).to_dict()
         except: pass
 
+    # Zachowujemy kolejność z plików (brak sortowania, brak scalenia duplikatów)
     links_to_do = []
-    for record in df_unique.to_dict('records'):
+    for record in df_raw.to_dict('records'):
         link = record['link']
         key = record.get('dedupe_key') or dedupe_key_from_link(link)
         new_price = str(record.get('cena', '')).strip()
@@ -417,6 +409,8 @@ def main():
 
             exists = os.path.exists(MASTER_FILE)
             df_new.to_csv(MASTER_FILE, mode='a', header=not exists, index=False)
+            # Zapamiętaj najnowszą cenę, żeby w tym samym przebiegu nie dublować tych samych cen
+            processed_prices[key] = new_price
             new_records = []
 
 if __name__ == "__main__":

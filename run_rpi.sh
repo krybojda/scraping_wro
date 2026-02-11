@@ -1,27 +1,34 @@
 #!/bin/bash
+set -euo pipefail
 
-# Ustawienia
+# Sciezka do repo na RPi
 CDir="/mnt/pendrive/Scraping_wro"
 LOGfile="$CDir/logs/log_$(date +'%Y-%m-%d').txt"
 
+# Upewnij sie, ze katalog na logi istnieje zanim cokolwiek przekierujemy
+mkdir -p "$CDir/logs"
 cd "$CDir"
 
 echo "=== START: $(date) ===" >> "$LOGfile"
 
-# 1. Pobierz najnowsze zmiany z chmury (żeby uniknąć konfliktów na starcie)
+# 1. Pobierz najnowsze zmiany z chmury (rebase minimalizuje konflikty)
 git pull --rebase origin main >> "$LOGfile" 2>&1
 
-# 2. Uruchom Pythona ( || true sprawia, że skrypt nie umiera po pkill/błędzie)
-#    Timeout ustawiony na 2h dla bezpieczeństwa
+# 2. Uruchom procesor (timeout 6h; || true pozwala dokonczyc skrypt mimo bledu/kill)
 timeout 6h python3 -u processor.py >> "$LOGfile" 2>&1 || true
 
-echo "--- Python zakończył pracę. Rozpoczynam wysyłanie... ---" >> "$LOGfile"
+echo "--- Python zakonczyl prace. Rozpoczynam wysylanie... ---" >> "$LOGfile"
 
-# 3. Dodaj i zatwierdź zmiany
-git add . >> "$LOGfile" 2>&1
-git commit -m "Auto-zapis: $(date +'%Y-%m-%d %H:%M')" >> "$LOGfile" 2>&1 || echo "Brak nowych zmian do commitowania." >> "$LOGfile"
+# 3. Dodaj i zatwierdz zmiany (tylko plik wyjściowy z RPi)
+git add mieszkania_complete.csv >> "$LOGfile" 2>&1 || true
 
-# 4. KLUCZOWE: Pobierz ewentualne zmiany z GitHuba i nałóż swoje
+if git diff --cached --quiet; then
+  echo "Brak nowych zmian do commitowania." >> "$LOGfile"
+else
+  git commit -m "Auto-zapis: $(date +'%Y-%m-%d %H:%M')" >> "$LOGfile" 2>&1
+fi
+
+# 4. Pobierz ewentualne zmiany z GitHuba i nałóż swoje
 git pull --rebase origin main >> "$LOGfile" 2>&1
 
 # 5. Wyślij do chmury
