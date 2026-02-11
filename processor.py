@@ -60,12 +60,14 @@ def dedupe_key_from_link(link: str) -> str:
     return oid or norm
 
 def send_discord_alert(offer, type="Nowa oferta"):
-    if "TWOJ_ID" in DISCORD_URL: return 
+    """Wyślij embed na Discord i loguj status (błędy były wcześniej ciche)."""
+    if "TWOJ_ID" in DISCORD_URL:
+        return False
     color = 5814783 if type == "Nowa oferta" else 16776960
     embed = {
         "title": f"🔔 {type}: {offer.get('tytul', 'Ogłoszenie')}",
         "url": offer['link'],
-        "color": color, 
+        "color": color,
         "fields": [
             {"name": "Cena", "value": f"{offer.get('cena', '?')} zł", "inline": True},
             {"name": "Czynsz", "value": f"{offer.get('czynsz', '?')}", "inline": True},
@@ -74,8 +76,20 @@ def send_discord_alert(offer, type="Nowa oferta"):
         "footer": {"text": "Bot Nieruchomości RPi"}
     }
     try:
-        requests.post(DISCORD_URL, json={"embeds": [embed]})
-    except: pass
+        resp = requests.post(DISCORD_URL, json={"embeds": [embed]}, timeout=15)
+        if resp.status_code == 204:
+            return True
+        if resp.status_code == 429:  # rate limit
+            try:
+                retry = float(resp.json().get("retry_after", 0)) / 1000
+            except Exception:
+                retry = 0
+            print(f"Discord rate limit 429, retry_after={retry}s")
+        else:
+            print(f"Discord webhook HTTP {resp.status_code}: {resp.text[:200]}")
+    except Exception as e:
+        print(f"Discord webhook exception: {e}")
+    return False
 
 def as_str(val) -> str:
     """Safely convert various API values (dict/list/primitive) to string."""

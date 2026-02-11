@@ -33,6 +33,6 @@ jobs:
           git config --global user.email 'action@github.com'
           # Dodajemy i wysyłamy tylko plik dedykowany dla GitHuba
           git add mieszkania_gh.csv
-          git commit -m "Auto-update danych z GitHub Actions" || echo "Brak zmian"
+          git commit -m "Auto-update danych z GitHub Actions $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "Brak zmian"
           git pull --rebase origin main
           git push
