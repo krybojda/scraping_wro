@@ -28,7 +28,7 @@ ua = UserAgent()
   
 # Definiujemy stałą kolejność kolumn w pliku, żeby nic się nie przesuwało
 FINAL_COLUMNS = [
-    'data_pobrania', 'tytul', 'cena', 'link', 'metraz', 
+    'data_pobrania', 'tytul', 'cena', 'link', 'aneks', 
     'czynsz', 'pietro', 'pokoje', 'lokalizacja', 
     'rok_budowy', 'ogrzewanie', 'kaucja', 'stan', 
     'powierzchnia', 'data_aktualizacji'
@@ -151,6 +151,20 @@ def clean_number(txt: str) -> str:
     m = re.search(r"[0-9]+(?:[\\.,][0-9]+)?", str(txt))
     return m.group(0).replace(',', '.') if m else ""
 
+ANEKS_PATTERN = re.compile(r"\baneks\w*\b", re.IGNORECASE)
+
+def detect_aneks_flag(*chunks) -> str:
+    text = " ".join(as_str(chunk) for chunk in chunks if chunk not in (None, ""))
+    return "TAK" if ANEKS_PATTERN.search(text) else "NIE"
+
+def normalize_aneks_flag(val) -> str:
+    txt = as_str(val).strip().upper()
+    if txt == "TAK":
+        return "TAK"
+    if txt == "NIE":
+        return "NIE"
+    return "TAK" if ANEKS_PATTERN.search(as_str(val)) else "NIE"
+
 def loc_to_str(loc) -> str:
     return as_str(loc)
 
@@ -170,6 +184,7 @@ def fill_defaults(rec: dict) -> dict:
         'pokoje': 'brak',
         'lokalizacja': 'brak',
         'powierzchnia': 'brak',
+        'aneks': 'brak',
     }
     for col, val in defaults.items():
         if rec.get(col) in ("", None):
@@ -227,6 +242,50 @@ def load_csv_safe(path):
     print(f"[{os.path.basename(path)}] total_lines={stats['total']} kept={stats['kept']} skip_no_link={stats['skip_no_link']} skip_short={stats['skip_short']}")
     return pd.DataFrame(rows, columns=['data_pobrania','tytul','cena','metraz','link'])
 
+def ensure_master_schema():
+    """Migracja starego schematu CSV (metraz -> aneks) i pilnowanie kolejności kolumn."""
+    if not os.path.exists(MASTER_FILE):
+        pd.DataFrame(columns=FINAL_COLUMNS).to_csv(MASTER_FILE, index=False)
+        return
+
+    try:
+        df_master = pd.read_csv(MASTER_FILE)
+    except Exception as e:
+        print(f"Nie mogę wczytać {MASTER_FILE} do migracji schematu: {e}")
+        return
+
+    changed = False
+
+    if 'aneks' not in df_master.columns:
+        df_master['aneks'] = "NIE"
+        changed = True
+
+    if 'metraz' in df_master.columns:
+        df_master = df_master.drop(columns=['metraz'])
+        changed = True
+
+    if 'aneks' in df_master.columns:
+        before = df_master['aneks'].astype(str)
+        after = df_master['aneks'].apply(normalize_aneks_flag)
+        if not after.equals(before):
+            changed = True
+        df_master['aneks'] = after
+
+    for col in FINAL_COLUMNS:
+        if col not in df_master.columns:
+            df_master[col] = ""
+            changed = True
+
+    if any(col not in FINAL_COLUMNS for col in df_master.columns):
+        changed = True
+
+    if list(df_master.columns) != FINAL_COLUMNS:
+        changed = True
+
+    if changed:
+        df_master = df_master[FINAL_COLUMNS]
+        df_master.to_csv(MASTER_FILE, index=False)
+
 def get_full_details_json(url):
     try:
         sleep_time = random.uniform(45, 90)
@@ -270,6 +329,14 @@ def get_full_details_json(url):
             lokalizacja = ", ".join(loc_parts)
 
         area_val = clean_number(get_from_target(target, ['Area', 'area']))
+        description_text = as_str(ad_data.get('description') or target.get('description'))
+        title_text = as_str(ad_data.get('title') or target.get('title'))
+        char_values_text = " ".join(
+            as_str(char.get(field))
+            for char in chars
+            for field in ('localizedValue', 'valueLabel', 'value', 'formattedValue')
+            if char.get(field)
+        )
 
         return {
             'czynsz': get_from_chars(chars, {'rent', 'fee'}) or get_from_target(target, ['Rent', 'rent', 'estateRent']),
@@ -322,6 +389,7 @@ def get_full_details_json(url):
             ),
             'lokalizacja': lokalizacja,
             'powierzchnia': area_val,
+            'aneks': detect_aneks_flag(title_text, description_text, char_values_text),
             'data_aktualizacji': datetime.now().strftime("%Y-%m-%d")
         }
     except Exception as e:
@@ -341,9 +409,8 @@ def main():
         except Exception as e: 
             print(f"Nie mogę wczytać {FILE_VPS}: {e}")
     
-    # Upewnij się, że MASTER_FILE istnieje (pusty z nagłówkiem), żeby git add nie wywalał się przy braku ofert
-    if not os.path.exists(MASTER_FILE):
-        pd.DataFrame(columns=FINAL_COLUMNS).to_csv(MASTER_FILE, index=False)
+    # Upewnij się, że MASTER_FILE istnieje i ma aktualny schemat kolumn.
+    ensure_master_schema()
 
     if not dfs: return
 
@@ -390,14 +457,6 @@ def main():
         
         if details:
             full_record = {**row, **details}
-            # Nie duplikuj metraĹĽu: jeĹ›li powierzchnia = metraĹĽ, zostaw tylko metraĹĽ
-            try:
-                metraz_val = clean_number(full_record.get('metraz', ''))
-                pow_val = clean_number(full_record.get('powierzchnia', ''))
-                if metraz_val and pow_val and metraz_val == pow_val:
-                    full_record['powierzchnia'] = ""
-            except:
-                pass
             full_record = fill_defaults(full_record)
             new_records.append(full_record)
             try:

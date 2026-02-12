@@ -11,6 +11,10 @@ if not os.path.exists(FILE):
     st.error("Brak pliku z danymi. Uruchom procesor!")
 else:
     df = pd.read_csv(FILE)
+    if 'aneks' not in df.columns:
+        df['aneks'] = 'NIE'
+    df['aneks'] = df['aneks'].fillna('NIE').astype(str).str.strip().str.upper()
+    df.loc[~df['aneks'].isin(['TAK', 'NIE']), 'aneks'] = 'NIE'
     
     # Czyszczenie ceny do liczb
     df['cena_num'] = pd.to_numeric(df['cena'].astype(str).str.replace(' ', '').str.replace(',', '.'), errors='coerce')
@@ -36,4 +40,4 @@ else:
     st.bar_chart(df_filtered['cena_num'])
 
     # Tabela
-    st.dataframe(df_filtered[['data_pobrania', 'tytul', 'cena', 'czynsz', 'pietro', 'lokalizacja', 'link']])
+    st.dataframe(df_filtered[['data_pobrania', 'tytul', 'cena', 'aneks', 'czynsz', 'pietro', 'lokalizacja', 'link']])

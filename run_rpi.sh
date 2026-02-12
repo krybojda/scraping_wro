@@ -11,6 +11,15 @@ cd "$CDir"
 
 echo "=== START: $(date) ===" >> "$LOGfile"
 
+# IP diagnostycznie na starcie (publiczne)
+PUBLIC_IP="$(curl -fsS --max-time 10 https://api.ipify.org 2>/dev/null || true)"
+
+if [ -n "$PUBLIC_IP" ]; then
+  echo "Public IP: $PUBLIC_IP" | tee -a "$LOGfile"
+else
+  echo "Public IP: (nie udalo sie pobrac)" | tee -a "$LOGfile"
+fi
+
 # 1. Pobierz najnowsze zmiany z chmury (rebase minimalizuje konflikty)
 git pull --rebase origin main >> "$LOGfile" 2>&1
 
@@ -25,7 +34,7 @@ git add mieszkania_complete.csv >> "$LOGfile" 2>&1 || true
 if git diff --cached --quiet; then
   echo "Brak nowych zmian do commitowania." >> "$LOGfile"
 else
-  git commit -m "Auto-zapis: $(date +'%Y-%m-%d %H:%M')" >> "$LOGfile" 2>&1
+  git commit -m "RPI Auto-zapis: $(date +'%Y-%m-%d %H:%M')" >> "$LOGfile" 2>&1
 fi
 
 # 4. Pobierz ewentualne zmiany z GitHuba i nałóż swoje
