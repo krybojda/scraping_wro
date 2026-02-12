@@ -184,7 +184,7 @@ def fill_defaults(rec: dict) -> dict:
         'pokoje': 'brak',
         'lokalizacja': 'brak',
         'powierzchnia': 'brak',
-        'aneks': 'brak',
+        'aneks': 'NIE',
     }
     for col, val in defaults.items():
         if rec.get(col) in ("", None):
@@ -488,4 +488,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
