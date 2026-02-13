@@ -21,6 +21,12 @@ BLACKLIST_FILE = "blacklist.csv"
 NODE_ID = 0
 TOTAL_NODES = 1
 
+if not os.path.exists("config_local.py"):
+    with open("config_local.py", "w") as f: f.write(f"NODE_ID={NODE_ID}\nTOTAL_NODES={TOTAL_NODES}")
+try: from config_local import NODE_ID, TOTAL_NODES
+except: pass
+print(f"🔧 Config: Node {NODE_ID} / {TOTAL_NODES}")
+
 DISCORD_URL = "https://discord.com/api/webhooks/1470223047867764800/m08l3piGAiD5sSXnl2bTgJX1LRzopi9WBjSkqUp5s9eXRuXR6o4exmVLChVdWRIIk_R2"
 
 ua = UserAgent()

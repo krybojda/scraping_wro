@@ -6,3 +6,4 @@ logs/
 log_*.txt
 __pycache__/
 komendy.txt
+config_local.py
