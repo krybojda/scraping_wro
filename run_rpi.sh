@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Sciezka do repo na RPi
-CDir="/mnt/pendrive/Scraping_wro"
+CDir="/mnt/pendrive/scraping_wro"
 LOGfile="$CDir/logs/log_$(date +'%Y-%m-%d').txt"
 
 # Upewnij sie, ze katalog na logi istnieje zanim cokolwiek przekierujemy
