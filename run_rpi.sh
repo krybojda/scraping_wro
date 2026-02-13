@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # --- KONFIGURACJA ---
-CDir="/mnt/pendrive/scraping_wro"
+CDir="$(cd "$(dirname "$0")" && pwd)"
 # Upewniamy się, że nazwa logu jest poprawna
 LOGfile="$CDir/logs/log_$(date +'%Y-%m-%d').txt"
 
