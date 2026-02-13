@@ -331,6 +331,9 @@ def main():
     STATS['checked'] = total
 
     try:
+        # --- NOWE: Ustawienie licznika błędów ---
+        consecutive_fails = 0
+        MAX_FAILS = 5
         for i, row in enumerate(links_to_do):
             # SPRAWDZAMY FLAGĘ NA POCZĄTKU KAŻDEGO OBIEGU
             if stop_requested:
@@ -346,6 +349,7 @@ def main():
                 break
 
             if status == "OK" and details:
+                consecutive_fails = 0
                 full_record = {**row, **details}
                 full_record = fill_defaults(full_record)
                 
@@ -365,16 +369,33 @@ def main():
                     STATS['saved'] += 1
                 except Exception as e:
                     print(f"   ⚠️ Błąd zapisu: {e}")
-            
+
             elif status == "CAPTCHA":
                 print(f"   🤖 POMINIĘTO: Wykryto CAPTCHA!")
                 STATS['captcha'] += 1
+                
+                # --- NOWE: Dolicz błąd i sprawdź limit ---
+                consecutive_fails += 1
+                if consecutive_fails >= MAX_FAILS:
+                    print(f"\n🛑 HAMULEC AWARYJNY: {consecutive_fails} błędów pod rząd. Zamykam Node'a!")
+                    break
+                # -----------------------------------------
+
             elif status == "BAN":
                 print(f"   🚨 POMINIĘTO: BAN IP (403)!")
                 STATS['ban'] += 1
+                
+                # --- NOWE: Dolicz błąd i sprawdź limit ---
+                consecutive_fails += 1
+                if consecutive_fails >= MAX_FAILS:
+                    print(f"\n🛑 HAMULEC AWARYJNY: {consecutive_fails} banów pod rząd. Zamykam Node'a!")
+                    break
+                # -----------------------------------------
+
             elif status == "RATE_LIMIT":
                 print(f"   ⏳ POMINIĘTO: Rate Limit (429)!")
                 time.sleep(180)
+                
             else:
                 print(f"   ⚠️ POMINIĘTO: {status} (-> Blacklist)")
                 STATS['skipped'] += 1
