@@ -7,6 +7,8 @@ import os
 import json
 import csv
 import re
+import sys
+import signal  # <--- KLUCZOWA BIBLIOTEKA DO PKILL
 from datetime import datetime
 from fake_useragent import UserAgent
 
@@ -14,8 +16,8 @@ from fake_useragent import UserAgent
 FILE_GH = "mieszkania_gh.csv"
 FILE_VPS = "mieszkania_vps.csv"
 MASTER_FILE = "mieszkania_complete.csv"
+BLACKLIST_FILE = "blacklist.csv"
 
-# Konfiguracja maszyny (dla rozproszonego przetwarzania)    
 NODE_ID = 0
 TOTAL_NODES = 1
 
@@ -30,14 +32,22 @@ FINAL_COLUMNS = [
     'powierzchnia', 'data_aktualizacji'
 ]
 
-# --- LICZNIK STATYSTYK (NOWOŚĆ) ---
 STATS = {
-    "checked": 0,   # Ile linków przetworzono
-    "saved": 0,     # Ile zapisano do pliku
-    "skipped": 0,   # Ile pominięto (brak danych/stare)
-    "captcha": 0,   # Ile razy wykryto weryfikację
-    "ban": 0        # Ile razy 403
+    "checked": 0, "saved": 0, "skipped": 0, "captcha": 0, "ban": 0
 }
+
+# Flaga sterująca zatrzymaniem
+stop_requested = False
+
+# --- OBSŁUGA SYGNAŁÓW (pkill / Ctrl+C) ---
+def signal_handler(signum, frame):
+    global stop_requested
+    print(f"\n🛑 OTRZYMANO SYGNAŁ ZATRZYMANIA ({signum})! Kończę bezpiecznie...")
+    stop_requested = True
+
+# Rejestrujemy obsługę sygnałów
+signal.signal(signal.SIGTERM, signal_handler) # To łapie 'sudo pkill'
+signal.signal(signal.SIGINT, signal_handler)  # To łapie 'Ctrl+C'
 
 # --- FUNKCJE POMOCNICZE ---
 def normalize_link(link: str) -> str:
@@ -57,10 +67,6 @@ def dedupe_key_from_link(link: str) -> str:
     return oid or norm
 
 def clean_duplicates_in_master():
-    """
-    Usuwa TYLKO zduplikowane wiersze (linki).
-    NIE ZMIENIA WARTOŚCI W KOMÓRKACH (szanuje historię np. '—').
-    """
     if not os.path.exists(MASTER_FILE): return
     try:
         df = pd.read_csv(MASTER_FILE, dtype=str)
@@ -74,41 +80,35 @@ def clean_duplicates_in_master():
             df.to_csv(MASTER_FILE, index=False)
     except Exception: pass
 
-def send_discord_summary():
-    """Wysyła raport końcowy na Discorda ORAZ zapisuje go w logach."""
+def send_discord_summary(manual_stop=False):
+    """Wysyła raport końcowy na Discorda."""
     
-    # --- CZĘŚĆ 1: ZAPIS DO LOGÓW ---
     print("\n" + "="*40)
     print(f"📊 RAPORT KOŃCOWY (Node {NODE_ID})")
-    print(f"   🔍 Sprawdzono łącznie: {STATS.get('checked', 0)}")
-    print(f"   💾 Zapisano nowych:    {STATS['saved']}")
-    print(f"   ⚠️ Captcha / Ban:      {STATS['captcha']} / {STATS['ban']}")
-    print(f"   🗑️ Pominięto:          {STATS['skipped']}")
+    if manual_stop or stop_requested: print("   🛑 STATUS: ZATRZYMANO RĘCZNIE (pkill/Ctrl+C)")
+    print(f"   🔍 Sprawdzono:       {STATS.get('checked', 0)}")
+    print(f"   💾 Zapisano nowych:  {STATS['saved']}")
+    print(f"   ⚠️ Captcha / Ban:    {STATS['captcha']} / {STATS['ban']}")
+    print(f"   🗑️ Pominięto:        {STATS['skipped']}")
     print("="*40 + "\n")
-    # -------------------------------
 
     if "TWOJ_ID" in DISCORD_URL: return
     
-    # --- CZĘŚĆ 2: LOGIKA POWIADOMIEŃ (PING) ---
     ping_msg = ""
-    
-    # Scenariusz 1: AWARIA (Ban/Captcha) -> Budzimy wszystkich!
     if STATS['captcha'] > 0 or STATS['ban'] > 0:
         color = 15548997 # Czerwony
-        title = "🚨 RPi RAPORT: WYKRYTO PROBLEMY"
+        title = "🚨 RPi RAPORT: AWARIA / BLOKADA"
         ping_msg = "@everyone 🆘 WYMAGANA INTERWENCJA!" 
-
-    # Scenariusz 2: SUKCES (Są nowe mieszkania) -> Wołamy obecnych
+    elif manual_stop or stop_requested:
+        color = 16776960 # Żółty
+        title = "🛑 RPi RAPORT: Zatrzymano ręcznie"
     elif STATS['saved'] > 0:
         color = 5814783  # Zielony
         title = "📊 RPi RAPORT: Sukces"
         ping_msg = "@here 👋 Znaleziono nowe oferty!"
-
-    # Scenariusz 3: CISZA (Nic nowego) -> Bez pinga
     else:
         color = 12370112 # Szary
         title = "💤 RPi RAPORT: Brak nowości"
-        ping_msg = "" # Pusty ciąg = brak powiadomienia
 
     embed = {
         "title": title,
@@ -121,19 +121,13 @@ def send_discord_summary():
         ],
         "footer": {"text": f"Node {NODE_ID} • {datetime.now().strftime('%H:%M')}"}
     }
-
-    # Budujemy paczkę z treścią (content) i ramką (embed)
-    payload = {
-        "content": ping_msg,  # <--- TUTAJ JEST MAGIA PINGOWANIA
-        "embeds": [embed]
-    }
-
+    payload = {"content": ping_msg, "embeds": [embed]}
     try: requests.post(DISCORD_URL, json=payload, timeout=10)
     except: pass
 
 def send_discord_alert(offer, type="Nowa oferta"):
     if "TWOJ_ID" in DISCORD_URL: return False
-    color = 5814783 if type == "Nowa oferta" else 15548997 if "BAN" in type else 16776960
+    color = 5814783 if type == "Nowa oferta" else 15548997
     embed = {
         "title": f"🔔 {type}: {offer.get('tytul', 'Ogłoszenie')}",
         "url": offer.get('link', ''),
@@ -147,7 +141,6 @@ def send_discord_alert(offer, type="Nowa oferta"):
     try: requests.post(DISCORD_URL, json={"embeds": [embed]}, timeout=15)
     except: pass
 
-# ... (Funkcje parsujące bez zmian: as_str, get_from_chars itp.) ...
 def as_str(val) -> str:
     if val is None: return ""
     if isinstance(val, dict):
@@ -224,36 +217,30 @@ def load_csv_safe(path):
             rows.append({'data_pobrania': data_pobrania, 'tytul': tytul, 'cena': cena, 'metraz': metraz, 'link': link})
     return pd.DataFrame(rows, columns=['data_pobrania','tytul','cena','metraz','link'])
 
-# --- GŁÓWNA FUNKCJA POBIERAJĄCA (Zwraca (dane, status)) ---
 def get_full_details_json(url):
+    # --- PRZERYWANIE SPANIA PRZY PKILL ---
+    # Zamiast jednego długiego sleepa, robimy pętlę krótkich sleepów
+    # żeby szybciej zareagować na sygnał stopu
+    sleep_target = random.uniform(45, 90)
+    print(f"   (Czekam {sleep_target:.1f}s...)") 
+    
+    elapsed = 0
+    while elapsed < sleep_target:
+        if stop_requested:
+            return None, "MANUAL_STOP" # Przerywamy czekanie natychmiast
+        time.sleep(1)
+        elapsed += 1
+
     try:
-        sleep_time = random.uniform(45, 90)
-        print(f"   (Czekam {sleep_time:.1f}s...)") 
-        time.sleep(sleep_time)
-        
         headers = {'User-Agent': ua.random, 'Accept-Language': 'pl-PL'}
         resp = requests.get(url, headers=headers)
         
-        if resp.status_code == 403:
-            print(f"🚨 CRITICAL: BAN IP (403) - {url}")
-            send_discord_alert({'link': url, 'tytul': 'BAN IP'}, type="🚨 AWARIA BAN")
-            time.sleep(120) 
-            return None, "BAN" # Zwracamy status
-            
-        if resp.status_code == 429:
-            print(f"⏳ WARN: Za szybko (429).")
-            time.sleep(180)
-            return None, "RATE_LIMIT"
-
-        if resp.status_code != 200: 
-            return None, "HTTP_ERROR"
+        if resp.status_code == 403: return None, "BAN"
+        if resp.status_code == 429: return None, "RATE_LIMIT"
+        if resp.status_code != 200: return None, "HTTP_ERROR"
 
         soup = BeautifulSoup(resp.content, 'html.parser')
-        
-        # WYKRYWANIE CAPTCHA
         if "Weryfikacja" in soup.title.text or "robot" in soup.text:
-            print("🤖 CAPTCHA!")
-            send_discord_alert({'link': url, 'tytul': 'CAPTCHA'}, type="🚨 AWARIA CAPTCHA")
             return None, "CAPTCHA"
 
         data_script = soup.find('script', id='__NEXT_DATA__')
@@ -295,11 +282,11 @@ def get_full_details_json(url):
         }
         return result, "OK"
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"   ⚠️ Szczegóły błędu: {e}")
         return None, "ERROR"
 
 def main():
-    print(f"--- START RPi PROCESSOR (With Summary) ---")
+    print(f"--- START RPi PROCESSOR (Safety pkill ready) ---")
     clean_duplicates_in_master()
 
     dfs = []
@@ -311,7 +298,7 @@ def main():
 
     if not dfs: 
         print("Brak plików wejściowych.")
-        send_discord_summary() # Wyślij raport nawet jak pusto
+        send_discord_summary()
         return
 
     df_raw = pd.concat(dfs, ignore_index=True)
@@ -324,68 +311,84 @@ def main():
                 processed_keys = set(df_m['link'].apply(dedupe_key_from_link))
         except: pass
 
+    blacklisted_keys = set()
+    if os.path.exists(BLACKLIST_FILE):
+        try:
+            with open(BLACKLIST_FILE, "r", encoding="utf-8") as f:
+                blacklisted_keys = set(dedupe_key_from_link(line.strip()) for line in f if line.strip())
+            print(f"⚫ Załadowano {len(blacklisted_keys)} linków z czarnej listy.")
+        except: pass
+
     links_to_do = []
     for record in df_raw.to_dict('records'):
         key = dedupe_key_from_link(record['link'])
-        if key not in processed_keys:
+        if key not in processed_keys and key not in blacklisted_keys:
             links_to_do.append(record)
-            processed_keys.add(key) 
+            processed_keys.add(key)
 
     total = len(links_to_do)
     print(f"Do przetworzenia (netto): {total}")
-    STATS['checked'] = total # Ustawiamy ile planujemy sprawdzić
+    STATS['checked'] = total
 
-    for i, row in enumerate(links_to_do):
-        if i % TOTAL_NODES != NODE_ID: continue
+    try:
+        for i, row in enumerate(links_to_do):
+            # SPRAWDZAMY FLAGĘ NA POCZĄTKU KAŻDEGO OBIEGU
+            if stop_requested:
+                break
+            
+            if i % TOTAL_NODES != NODE_ID: continue
 
-        # 1. Wypisz numer i link
-        print(f"[{i+1}/{total}] {row['link'][-35:]}")
-        
-        # 2. Pobierz dane
-        details, status = get_full_details_json(row['link'])
-        
-        # 3. Zaloguj wynik
-        if status == "OK" and details:
-            full_record = {**row, **details}
-            full_record = fill_defaults(full_record)
+            print(f"[{i+1}/{total}] {row['link'][-35:]}")
+            details, status = get_full_details_json(row['link'])
             
-            # ZAPIS
-            df_single = pd.DataFrame([full_record])
-            for col in FINAL_COLUMNS:
-                if col not in df_single.columns: df_single[col] = ""
-            df_single = df_single[FINAL_COLUMNS]
+            # Jeśli przerwano podczas sleepa:
+            if status == "MANUAL_STOP":
+                break
 
-            exists = os.path.exists(MASTER_FILE) and os.path.getsize(MASTER_FILE) > 0
-            try:
-                with open(MASTER_FILE, 'a', newline='', encoding='utf-8') as f:
-                    df_single.to_csv(f, header=not exists, index=False)
-                    f.flush()
-                    os.fsync(f.fileno())
-                print(f"   💾 Zapisano.") # LOG: SUKCES
-                send_discord_alert(full_record)
-                STATS['saved'] += 1
-            except Exception as e:
-                print(f"   ⚠️ Błąd zapisu: {e}") # LOG: BŁĄD DYSKU
-        
-        elif status == "CAPTCHA":
-            print(f"   🤖 POMINIĘTO: Wykryto CAPTCHA!") # LOG: CAPTCHA
-            STATS['captcha'] += 1
-            
-        elif status == "BAN":
-            print(f"   🚨 POMINIĘTO: BAN IP (403)!") # LOG: BAN
-            STATS['ban'] += 1
-            
-        elif status == "RATE_LIMIT":
-            print(f"   ⏳ POMINIĘTO: Rate Limit (429)!") # LOG: ZA SZYBKO
-            
-        else:
-            # Inne powody: EMPTY_DATA, HTTP_ERROR, NO_JSON
-            print(f"   ⚠️ POMINIĘTO: {status}") # LOG: INNE
-            STATS['skipped'] += 1
+            if status == "OK" and details:
+                full_record = {**row, **details}
+                full_record = fill_defaults(full_record)
+                
+                df_single = pd.DataFrame([full_record])
+                for col in FINAL_COLUMNS:
+                    if col not in df_single.columns: df_single[col] = ""
+                df_single = df_single[FINAL_COLUMNS]
 
-    # NA SAM KONIEC: Wyślij raport zbiorczy
-    print("--- Koniec pracy. Wysyłam raport... ---")
-    send_discord_summary()
+                exists = os.path.exists(MASTER_FILE) and os.path.getsize(MASTER_FILE) > 0
+                try:
+                    with open(MASTER_FILE, 'a', newline='', encoding='utf-8') as f:
+                        df_single.to_csv(f, header=not exists, index=False)
+                        f.flush()
+                        os.fsync(f.fileno())
+                    print(f"   💾 Zapisano.")
+                    send_discord_alert(full_record)
+                    STATS['saved'] += 1
+                except Exception as e:
+                    print(f"   ⚠️ Błąd zapisu: {e}")
+            
+            elif status == "CAPTCHA":
+                print(f"   🤖 POMINIĘTO: Wykryto CAPTCHA!")
+                STATS['captcha'] += 1
+            elif status == "BAN":
+                print(f"   🚨 POMINIĘTO: BAN IP (403)!")
+                STATS['ban'] += 1
+            elif status == "RATE_LIMIT":
+                print(f"   ⏳ POMINIĘTO: Rate Limit (429)!")
+                time.sleep(180)
+            else:
+                print(f"   ⚠️ POMINIĘTO: {status} (-> Blacklist)")
+                STATS['skipped'] += 1
+                try:
+                    with open(BLACKLIST_FILE, "a", encoding="utf-8") as f:
+                        f.write(row['link'] + "\n")
+                except: pass
+
+    except Exception as e:
+        print(f"!!! KRYTYCZNY BŁĄD PĘTLI: {e}")
+    finally:
+        # TO WYKONA SIĘ ZAWSZE - NAWET PO PKILL
+        print("--- Koniec pracy. Wysyłam raport... ---")
+        send_discord_summary()
 
 if __name__ == "__main__":
     main()
