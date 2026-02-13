@@ -30,6 +30,7 @@ FINAL_COLUMNS = [
     'powierzchnia', 'data_aktualizacji'
 ]
 
+
 # --- FUNKCJE POMOCNICZE ---
 def normalize_link(link: str) -> str:
     if not isinstance(link, str): return ""
