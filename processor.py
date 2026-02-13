@@ -15,7 +15,7 @@ FILE_GH = "mieszkania_gh.csv"
 FILE_VPS = "mieszkania_vps.csv"
 MASTER_FILE = "mieszkania_complete.csv"
 
-# Konfiguracja maszyn
+# Konfiguracja maszyny (dla rozproszonego przetwarzania)    
 NODE_ID = 0
 TOTAL_NODES = 1
 
@@ -30,6 +30,14 @@ FINAL_COLUMNS = [
     'powierzchnia', 'data_aktualizacji'
 ]
 
+# --- LICZNIK STATYSTYK (NOWOŚĆ) ---
+STATS = {
+    "checked": 0,   # Ile linków przetworzono
+    "saved": 0,     # Ile zapisano do pliku
+    "skipped": 0,   # Ile pominięto (brak danych/stare)
+    "captcha": 0,   # Ile razy wykryto weryfikację
+    "ban": 0        # Ile razy 403
+}
 
 # --- FUNKCJE POMOCNICZE ---
 def normalize_link(link: str) -> str:
@@ -55,35 +63,77 @@ def clean_duplicates_in_master():
     """
     if not os.path.exists(MASTER_FILE): return
     try:
-        # Wczytujemy wszystko jako tekst (dtype=str), żeby pandas nie zamieniał '—' na NaN
         df = pd.read_csv(MASTER_FILE, dtype=str)
-        
         if 'link' not in df.columns: return
-        
         initial_len = len(df)
         df['dedupe_key'] = df['link'].apply(dedupe_key_from_link)
-        
-        # Usuwamy duplikaty (zostawiamy ostatni napotkany)
         df = df.drop_duplicates(subset=['dedupe_key'], keep='last')
-        
-        # Usuwamy kolumnę pomocniczą
         df = df.drop(columns=['dedupe_key'])
-        
-        final_len = len(df)
-        if initial_len != final_len:
-            print(f"🧹 AUTOCZYSZCZENIE: Usunięto {initial_len - final_len} duplikatów.")
-            # Zapisujemy bez zmian w treści
+        if initial_len != len(df):
+            print(f"🧹 AUTOCZYSZCZENIE: Usunięto {initial_len - len(df)} duplikatów.")
             df.to_csv(MASTER_FILE, index=False)
-    except Exception as e:
-        print(f"Błąd autoczyszczenia: {e}")
+    except Exception: pass
+
+def send_discord_summary():
+    """Wysyła raport końcowy na Discorda ORAZ zapisuje go w logach."""
+    
+    # --- CZĘŚĆ 1: ZAPIS DO LOGÓW ---
+    print("\n" + "="*40)
+    print(f"📊 RAPORT KOŃCOWY (Node {NODE_ID})")
+    print(f"   🔍 Sprawdzono łącznie: {STATS.get('checked', 0)}")
+    print(f"   💾 Zapisano nowych:    {STATS['saved']}")
+    print(f"   ⚠️ Captcha / Ban:      {STATS['captcha']} / {STATS['ban']}")
+    print(f"   🗑️ Pominięto:          {STATS['skipped']}")
+    print("="*40 + "\n")
+    # -------------------------------
+
+    if "TWOJ_ID" in DISCORD_URL: return
+    
+    # --- CZĘŚĆ 2: LOGIKA POWIADOMIEŃ (PING) ---
+    ping_msg = ""
+    
+    # Scenariusz 1: AWARIA (Ban/Captcha) -> Budzimy wszystkich!
+    if STATS['captcha'] > 0 or STATS['ban'] > 0:
+        color = 15548997 # Czerwony
+        title = "🚨 RPi RAPORT: WYKRYTO PROBLEMY"
+        ping_msg = "@everyone 🆘 WYMAGANA INTERWENCJA!" 
+
+    # Scenariusz 2: SUKCES (Są nowe mieszkania) -> Wołamy obecnych
+    elif STATS['saved'] > 0:
+        color = 5814783  # Zielony
+        title = "📊 RPi RAPORT: Sukces"
+        ping_msg = "@here 👋 Znaleziono nowe oferty!"
+
+    # Scenariusz 3: CISZA (Nic nowego) -> Bez pinga
+    else:
+        color = 12370112 # Szary
+        title = "💤 RPi RAPORT: Brak nowości"
+        ping_msg = "" # Pusty ciąg = brak powiadomienia
+
+    embed = {
+        "title": title,
+        "color": color,
+        "fields": [
+            {"name": "🔍 Sprawdzono", "value": str(STATS.get('checked', 0)), "inline": True},
+            {"name": "💾 Zapisano", "value": str(STATS['saved']), "inline": True},
+            {"name": "⚠️ Captcha/Ban", "value": f"{STATS['captcha']} / {STATS['ban']}", "inline": True},
+            {"name": "🗑️ Pominięto", "value": str(STATS['skipped']), "inline": True}
+        ],
+        "footer": {"text": f"Node {NODE_ID} • {datetime.now().strftime('%H:%M')}"}
+    }
+
+    # Budujemy paczkę z treścią (content) i ramką (embed)
+    payload = {
+        "content": ping_msg,  # <--- TUTAJ JEST MAGIA PINGOWANIA
+        "embeds": [embed]
+    }
+
+    try: requests.post(DISCORD_URL, json=payload, timeout=10)
+    except: pass
 
 def send_discord_alert(offer, type="Nowa oferta"):
     if "TWOJ_ID" in DISCORD_URL: return False
-    
-    if type == "Nowa oferta": color = 5814783
-    elif "BAN" in type or "CAPTCHA" in type: color = 15548997
-    else: color = 16776960
-
+    color = 5814783 if type == "Nowa oferta" else 15548997 if "BAN" in type else 16776960
     embed = {
         "title": f"🔔 {type}: {offer.get('tytul', 'Ogłoszenie')}",
         "url": offer.get('link', ''),
@@ -94,15 +144,10 @@ def send_discord_alert(offer, type="Nowa oferta"):
         ],
         "footer": {"text": f"Bot RPi (Node {NODE_ID})"}
     }
-    if "BAN" in type:
-        embed['fields'] = [{"name": "Status", "value": "Wymagany reset IP"}]
-
-    try:
-        resp = requests.post(DISCORD_URL, json={"embeds": [embed]}, timeout=15)
-        if resp.status_code in [200, 204]: return True
+    try: requests.post(DISCORD_URL, json={"embeds": [embed]}, timeout=15)
     except: pass
-    return False
 
+# ... (Funkcje parsujące bez zmian: as_str, get_from_chars itp.) ...
 def as_str(val) -> str:
     if val is None: return ""
     if isinstance(val, dict):
@@ -179,7 +224,7 @@ def load_csv_safe(path):
             rows.append({'data_pobrania': data_pobrania, 'tytul': tytul, 'cena': cena, 'metraz': metraz, 'link': link})
     return pd.DataFrame(rows, columns=['data_pobrania','tytul','cena','metraz','link'])
 
-# --- GŁÓWNA FUNKCJA POBIERAJĄCA ---
+# --- GŁÓWNA FUNKCJA POBIERAJĄCA (Zwraca (dane, status)) ---
 def get_full_details_json(url):
     try:
         sleep_time = random.uniform(45, 90)
@@ -193,25 +238,31 @@ def get_full_details_json(url):
             print(f"🚨 CRITICAL: BAN IP (403) - {url}")
             send_discord_alert({'link': url, 'tytul': 'BAN IP'}, type="🚨 AWARIA BAN")
             time.sleep(120) 
-            return None
+            return None, "BAN" # Zwracamy status
+            
         if resp.status_code == 429:
             print(f"⏳ WARN: Za szybko (429).")
             time.sleep(180)
-            return None
-        if resp.status_code != 200: return None
+            return None, "RATE_LIMIT"
+
+        if resp.status_code != 200: 
+            return None, "HTTP_ERROR"
 
         soup = BeautifulSoup(resp.content, 'html.parser')
+        
+        # WYKRYWANIE CAPTCHA
         if "Weryfikacja" in soup.title.text or "robot" in soup.text:
             print("🤖 CAPTCHA!")
-            return None
+            send_discord_alert({'link': url, 'tytul': 'CAPTCHA'}, type="🚨 AWARIA CAPTCHA")
+            return None, "CAPTCHA"
 
         data_script = soup.find('script', id='__NEXT_DATA__')
-        if not data_script: return None
+        if not data_script: return None, "NO_JSON"
         
         json_data = json.loads(data_script.string)
         page_props = json_data.get('props', {}).get('pageProps', {})
         ad_data = page_props.get('ad') or page_props.get('advertisement')
-        if not ad_data: return None
+        if not ad_data: return None, "EMPTY_DATA"
 
         target = ad_data['target']
         chars = target.get('characteristics') or target.get('Characteristics') or []
@@ -229,7 +280,7 @@ def get_full_details_json(url):
         title = as_str(ad_data.get('title') or target.get('title'))
         full_text = title + " " + desc + " " + " ".join([as_str(c.get('value')) for c in chars])
 
-        return {
+        result = {
             'czynsz': get_from_chars(chars, {'rent', 'fee'}) or get_from_target(target, ['Rent', 'rent']),
             'pietro': polish_floor(get_from_chars(chars, {'floor_no', 'floor'}) or get_from_target(target, ['Floor_no', 'floor'])),
             'rok_budowy': get_from_chars(chars, {'build_year', 'year_built'}) or get_from_target(target, ['Build_year']),
@@ -242,60 +293,63 @@ def get_full_details_json(url):
             'aneks': detect_aneks_flag(full_text),
             'data_aktualizacji': datetime.now().strftime("%Y-%m-%d")
         }
-    except: return None
+        return result, "OK"
+    except Exception as e:
+        print(f"Error: {e}")
+        return None, "ERROR"
 
 def main():
-    print(f"--- START RPi PROCESSOR (History Protected) ---")
-
-    # 1. Autoczyszczenie (ale BEZ zmiany wartości w komórkach!)
+    print(f"--- START RPi PROCESSOR (With Summary) ---")
     clean_duplicates_in_master()
 
     dfs = []
     if os.path.exists(FILE_GH): dfs.append(load_csv_safe(FILE_GH))
     if os.path.exists(FILE_VPS): dfs.append(load_csv_safe(FILE_VPS))
     
-    # Tworzenie pliku master jeśli nie istnieje
     if not os.path.exists(MASTER_FILE):
         pd.DataFrame(columns=FINAL_COLUMNS).to_csv(MASTER_FILE, index=False)
 
-    if not dfs: return
+    if not dfs: 
+        print("Brak plików wejściowych.")
+        send_discord_summary() # Wyślij raport nawet jak pusto
+        return
+
     df_raw = pd.concat(dfs, ignore_index=True)
     
-    # 2. Zbuduj bazę tego, co już mamy
     processed_keys = set()
     if os.path.exists(MASTER_FILE):
         try:
-            # Wczytujemy z dtype=str żeby nic nie zmieniać
             df_m = pd.read_csv(MASTER_FILE, dtype=str)
             if 'link' in df_m.columns:
                 processed_keys = set(df_m['link'].apply(dedupe_key_from_link))
         except: pass
 
-    # 3. Wybierz TYLKO nowe (ignoruj wszystko co już jest w bazie)
     links_to_do = []
     for record in df_raw.to_dict('records'):
         key = dedupe_key_from_link(record['link'])
-        
-        # JEŚLI KLUCZ JUŻ ISTNIEJE W PLIKU - POMIŃ GO CAŁKOWICIE!
-        # Nawet jeśli w pliku wejściowym są nowsze dane - historia wygrywa.
         if key not in processed_keys:
             links_to_do.append(record)
             processed_keys.add(key) 
 
     total = len(links_to_do)
     print(f"Do przetworzenia (netto): {total}")
+    STATS['checked'] = total # Ustawiamy ile planujemy sprawdzić
 
     for i, row in enumerate(links_to_do):
         if i % TOTAL_NODES != NODE_ID: continue
 
-        print(f"[{i+1}/{total}] {row['link'][-25:]}")
-        details = get_full_details_json(row['link'])
+        # 1. Wypisz numer i link
+        print(f"[{i+1}/{total}] {row['link'][-35:]}")
         
-        if details:
+        # 2. Pobierz dane
+        details, status = get_full_details_json(row['link'])
+        
+        # 3. Zaloguj wynik
+        if status == "OK" and details:
             full_record = {**row, **details}
             full_record = fill_defaults(full_record)
             
-            # ZAPIS PANCERNY
+            # ZAPIS
             df_single = pd.DataFrame([full_record])
             for col in FINAL_COLUMNS:
                 if col not in df_single.columns: df_single[col] = ""
@@ -307,10 +361,31 @@ def main():
                     df_single.to_csv(f, header=not exists, index=False)
                     f.flush()
                     os.fsync(f.fileno())
-                print(f"   💾 Zapisano.")
+                print(f"   💾 Zapisano.") # LOG: SUKCES
                 send_discord_alert(full_record)
+                STATS['saved'] += 1
             except Exception as e:
-                print(f"⚠️ Błąd zapisu: {e}")
+                print(f"   ⚠️ Błąd zapisu: {e}") # LOG: BŁĄD DYSKU
+        
+        elif status == "CAPTCHA":
+            print(f"   🤖 POMINIĘTO: Wykryto CAPTCHA!") # LOG: CAPTCHA
+            STATS['captcha'] += 1
+            
+        elif status == "BAN":
+            print(f"   🚨 POMINIĘTO: BAN IP (403)!") # LOG: BAN
+            STATS['ban'] += 1
+            
+        elif status == "RATE_LIMIT":
+            print(f"   ⏳ POMINIĘTO: Rate Limit (429)!") # LOG: ZA SZYBKO
+            
+        else:
+            # Inne powody: EMPTY_DATA, HTTP_ERROR, NO_JSON
+            print(f"   ⚠️ POMINIĘTO: {status}") # LOG: INNE
+            STATS['skipped'] += 1
+
+    # NA SAM KONIEC: Wyślij raport zbiorczy
+    print("--- Koniec pracy. Wysyłam raport... ---")
+    send_discord_summary()
 
 if __name__ == "__main__":
     main()

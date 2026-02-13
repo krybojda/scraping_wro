@@ -29,7 +29,7 @@ timeout 6h python3 -u processor.py >> "$LOGfile" 2>&1 || true
 echo "--- Python zakonczyl prace. Rozpoczynam wysylanie... ---" >> "$LOGfile"
 
 # 3. Dodaj i zatwierdz zmiany (tylko plik wyjściowy z RPi)
-git add mieszkania_complete.csv >> "$LOGfile" 2>&1 || true
+git add . >> "$LOGfile" 2>&1 || true
 
 if git diff --cached --quiet; then
   echo "Brak nowych zmian do commitowania." >> "$LOGfile"
