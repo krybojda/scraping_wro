@@ -325,13 +325,36 @@ def main():
 
     df_raw = pd.concat(dfs, ignore_index=True)
     
+    # --- WCZYTYWANIE HISTORII (POPRAWIONE) ---
     processed_keys = set()
-    if os.path.exists(MASTER_FILE):
+
+    # 1. KROK PIERWSZY: Wczytaj Wielką Historię (mieszkania_complete.csv)
+    # To jest kluczowe! Nawet jak piszemy do node_0.csv, musimy wiedzieć, co już jest w bazie.
+    if os.path.exists("mieszkania_complete.csv"):
         try:
-            df_m = pd.read_csv(MASTER_FILE, dtype=str)
-            if 'link' in df_m.columns:
-                processed_keys = set(df_m['link'].apply(dedupe_key_from_link))
-        except: pass
+            # Wczytujemy tylko kolumnę link, żeby było szybciej
+            df_global = pd.read_csv("mieszkania_complete.csv", usecols=['link'], dtype=str, on_bad_lines='skip')
+            if 'link' in df_global.columns:
+                global_links = set(df_global['link'].apply(dedupe_key_from_link))
+                processed_keys.update(global_links)
+                print(f"📚 Załadowano bazę główną (complete): {len(global_links)} ofert.")
+        except Exception as e:
+            print(f"⚠️ Nie udało się wczytać bazy głównej: {e}")
+
+    # 2. KROK DRUGI: Wczytaj Lokalną Pracę (mieszkania_node_X.csv)
+    # Jeśli plik docelowy jest inny niż główny (tryb klastra), wczytaj też to, co w nim już jest.
+    if MASTER_FILE != "mieszkania_complete.csv" and os.path.exists(MASTER_FILE):
+        try:
+            df_local = pd.read_csv(MASTER_FILE, usecols=['link'], dtype=str, on_bad_lines='skip')
+            if 'link' in df_local.columns:
+                local_links = set(df_local['link'].apply(dedupe_key_from_link))
+                processed_keys.update(local_links)
+                print(f"📝 Załadowano plik roboczy ({MASTER_FILE}): {len(local_links)} ofert.")
+        except Exception as e:
+            print(f"⚠️ Nie udało się wczytać pliku roboczego: {e}")
+
+    print(f"🧠 ŁĄCZNA PAMIĘĆ BOTA: {len(processed_keys)} unikalnych ofert (nie będę ich sprawdzał).")
+    # -----------------------------------------
 
 # --- WCZYTYWANIE CZARNEJ LISTY (POPRAWIONE) ---
     blacklisted_keys = set()
