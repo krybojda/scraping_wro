@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # 1. Przejdz do katalogu projektu (ZMIEN TE SCIEZKE NA SWOJA!)
-cd /home/ubuntu/Scraping_wro
+cd /home/ubuntu/scraping_wro
 
 # Plik logu (jak na RPi – jeden plik dzienny w katalogu logs/)
 mkdir -p logs
