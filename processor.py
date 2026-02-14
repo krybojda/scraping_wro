@@ -333,13 +333,37 @@ def main():
                 processed_keys = set(df_m['link'].apply(dedupe_key_from_link))
         except: pass
 
+# --- WCZYTYWANIE CZARNEJ LISTY (POPRAWIONE) ---
     blacklisted_keys = set()
-    if os.path.exists(BLACKLIST_FILE):
+    
+    # 1. Zawsze wczytaj główną, starą blacklistę (jeśli istnieje)
+    # Dzięki temu Node wie o banach z przeszłości
+    if os.path.exists("blacklist.csv"):
         try:
-            with open(BLACKLIST_FILE, "r", encoding="utf-8") as f:
-                blacklisted_keys = set(dedupe_key_from_link(line.strip()) for line in f if line.strip())
-            print(f"⚫ Załadowano {len(blacklisted_keys)} linków z czarnej listy.")
+            with open("blacklist.csv", "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        blacklisted_keys.add(dedupe_key_from_link(line.strip()))
+            print(f"⚫ Załadowano główną blacklist.csv: {len(blacklisted_keys)} wpisów.")
         except: pass
+
+    # 2. Jeśli pracujemy w klastrze, wczytaj też plik lokalny tego Node'a
+    # (bo może przed chwilą coś zbanował, a nie scaliłeś jeszcze plików)
+    if TOTAL_NODES > 1 and os.path.exists(BLACKLIST_FILE) and BLACKLIST_FILE != "blacklist.csv":
+        try:
+            local_count = 0
+            with open(BLACKLIST_FILE, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        key = dedupe_key_from_link(line.strip())
+                        if key not in blacklisted_keys:
+                            blacklisted_keys.add(key)
+                            local_count += 1
+            print(f"⚫ Dociągnięto z {BLACKLIST_FILE}: {local_count} nowych wpisów.")
+        except: pass
+    
+    print(f"⚫ ŁĄCZNIE NA CZARNEJ LIŚCIE: {len(blacklisted_keys)}")
+    # ---------------------------------------------
 
     links_to_do = []
     for record in df_raw.to_dict('records'):
