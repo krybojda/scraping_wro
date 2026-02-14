@@ -15,17 +15,33 @@ from fake_useragent import UserAgent
 # --- KONFIGURACJA ---
 FILE_GH = "mieszkania_gh.csv"
 FILE_VPS = "mieszkania_vps.csv"
-MASTER_FILE = "mieszkania_complete.csv"
-BLACKLIST_FILE = "blacklist.csv"
 
+# Domyślne wartości (zostaną nadpisane przez config_local.py)
 NODE_ID = 0
 TOTAL_NODES = 1
 
+# 1. Najpierw ładujemy config, żeby znać NODE_ID
 if not os.path.exists("config_local.py"):
     with open("config_local.py", "w") as f: f.write(f"NODE_ID={NODE_ID}\nTOTAL_NODES={TOTAL_NODES}")
-try: from config_local import NODE_ID, TOTAL_NODES
-except: pass
+
+try: 
+    from config_local import NODE_ID, TOTAL_NODES
+except: 
+    pass
+
 print(f"🔧 Config: Node {NODE_ID} / {TOTAL_NODES}")
+
+# 2. Dopiero teraz ustawiamy nazwy plików zależnie od trybu pracy
+if TOTAL_NODES > 1:
+    # Tryb KLASTRA (wiele maszyn) -> Każdy ma swój plik
+    MASTER_FILE = f"mieszkania_node_{NODE_ID}.csv"
+    BLACKLIST_FILE = f"blacklist_node_{NODE_ID}.csv"
+    print(f"🤖 Tryb CLUSTER. Zapisuję do: {MASTER_FILE}")
+else:
+    # Tryb SOLO (jedna maszyna) -> Jeden główny plik
+    MASTER_FILE = "mieszkania_complete.csv"
+    BLACKLIST_FILE = "blacklist.csv"
+    print(f"🤖 Tryb SOLO. Zapisuję do: {MASTER_FILE}")
 
 DISCORD_URL = "https://discord.com/api/webhooks/1470223047867764800/m08l3piGAiD5sSXnl2bTgJX1LRzopi9WBjSkqUp5s9eXRuXR6o4exmVLChVdWRIIk_R2"
 
