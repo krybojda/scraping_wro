@@ -11,11 +11,14 @@ from fake_useragent import UserAgent
 
 # --- KONFIGURACJA ---
 FILE_NAME = os.getenv("OUTPUT_FILE", "mieszkania_wroclaw.csv")
-MAX_EXECUTION_TIME = int(os.getenv("MAX_EXECUTION_TIME", 21600))
+MAX_EXECUTION_TIME = int(os.getenv("MAX_EXECUTION_TIME", 21600))  # 6 godzin w sekundach
 BASE_URL = "https://www.otodom.pl/pl/wyniki/wynajem/mieszkanie/dolnoslaskie/wroclaw/wroclaw/wroclaw?limit=36&ownerTypeSingleSelect=ALL&by=DEFAULT&direction=DESC&viewType=listing"
 
 # Definiujemy SZTYWNĄ listę kolumn - to jest Twój "Bezpiecznik"
 FINAL_COLUMNS = ['data_pobrania', 'tytul', 'cena', 'metraz', 'link']
+
+# --- LIMIT STRON (NOWOŚĆ) ---
+MAX_PAGES = int(os.getenv("MAX_PAGES", 25))
 
 ua = UserAgent()
 START_TIME = time.time()
@@ -85,17 +88,20 @@ def get_listing_basic(url):
 
 def main():
     print(f"--- START ZWIADOWCY --- Plik: {FILE_NAME}")
+    print(f"Limit stron: {MAX_PAGES}") # Info dla Ciebie w logach
+    
     ip = get_public_ip()
     print(f"Aktualne IP: {ip if ip else 'Brak danych'}")
     
     page = 1
     
-    while True:
+    # GŁÓWNA PĘTLA Z LIMITEM STRON
+    while page <= MAX_PAGES:
         if (time.time() - START_TIME) > MAX_EXECUTION_TIME:
             print("Koniec czasu.")
             break
 
-        print(f"Skanuję stronę {page}...")
+        print(f"Skanuję stronę {page}/{MAX_PAGES}...")
         soup = make_request(f"{BASE_URL}&page={page}")
         if not soup: break
 
@@ -115,18 +121,17 @@ def main():
         if page_data:
             df = pd.DataFrame(page_data)
             
-            # --- SEKCJA BEZPIECZEŃSTWA (DODANA) ---
-            # 1. Upewniamy się, że mamy kolumnę 'metraz', nawet jak scraper nie znalazł
+            # --- SEKCJA BEZPIECZEŃSTWA ---
+            # 1. Upewniamy się, że mamy kolumnę 'metraz'
             if 'metraz' not in df.columns: df['metraz'] = ""
             
-            # 2. Dodajemy brakujące kolumny (na wszelki wypadek)
+            # 2. Dodajemy brakujące kolumny
             for col in FINAL_COLUMNS:
                 if col not in df.columns: df[col] = ""
             
             # 3. WYMUSZAMY KOLEJNOŚĆ KOLUMN
-            # To gwarantuje, że plik się nie rozsypie
             df = df[FINAL_COLUMNS]
-            # --------------------------------------
+            # -----------------------------
 
             exists = os.path.isfile(FILE_NAME)
             df.to_csv(
@@ -141,7 +146,7 @@ def main():
         
         page += 1
         # Przerwa między stronami listingu
-        time.sleep(random.uniform(5, 15)) 
+        time.sleep(random.uniform(5, 30)) 
 
 if __name__ == "__main__":
     main()

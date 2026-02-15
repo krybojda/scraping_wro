@@ -2,7 +2,7 @@ name: Scraper - GitHub Actions (Short Run)
 
 on:
   schedule:
-    - cron: '0 8 * * *' # Codziennie 8:00 rano
+    - cron: '0 8,20 * * *' # Codziennie 8:00 rano i 20:00 wieczorem
   workflow_dispatch:
 
 jobs:
@@ -22,7 +22,8 @@ jobs:
         # TUTAJ DEFINIUJESZ WARUNKI DLA GITHUB ACTIONS:
         run: |
           docker run --rm \
-          -e MAX_EXECUTION_TIME=3300 \
+          -e MAX_EXECUTION_TIME=1500 \
+          -e MAX_PAGES=5 \
           -e OUTPUT_FILE="mieszkania_gh.csv" \
           -v ${{ github.workspace }}:/app \
           scraper
