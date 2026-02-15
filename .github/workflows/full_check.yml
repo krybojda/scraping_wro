@@ -1,0 +1,82 @@
+name: CI - Full System Check (Python, Bash, Docker)
+
+# Uruchamiaj przy każdym Pull Request do main oraz ręcznie
+on:
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  # ZADANIE 1: Sprawdzanie kodu źródłowego (Python + Bash)
+  scripts-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Pobranie kodu
+        uses: actions/checkout@v4
+
+      # --- SEKCYJNA PYTHON ---
+      - name: Instalacja Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalacja zależności
+        run: |
+          python -m pip install --upgrade pip
+          # Instalujemy biblioteki, żeby 'import' w kodzie nie wyrzucał błędów
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          # Doinstalowujemy ręcznie kluczowe, jeśli nie ma requirements.txt
+          pip install pandas requests beautifulsoup4 fake-useragent
+
+      - name: 🐍 Sprawdzanie składni WSZYSTKICH plików .py
+        run: |
+          echo "🔍 Szukam błędów składni (Syntax Error) we wszystkich plikach .py..."
+          # compileall przechodzi przez wszystkie katalogi i kompiluje .py
+          # Jeśli znajdzie błąd składni, zwróci exit code 1 i zatrzyma test
+          python -m compileall .
+
+      # --- SEKCJA BASH (.sh) ---
+      - name: 🐚 Sprawdzanie skryptów .sh (ShellCheck)
+        run: |
+          sudo apt-get install -y shellcheck
+          
+          echo "🔍 Sprawdzam run_rpi.sh..."
+          if [ -f run_rpi.sh ]; then 
+            shellcheck run_rpi.sh
+          else 
+            echo "⚠️ run_rpi.sh nie istnieje (pomijam)"
+          fi
+
+          echo "🔍 Sprawdzam run_vps.sh..."
+          if [ -f run_vps.sh ]; then 
+            shellcheck run_vps.sh
+          else 
+            echo "⚠️ run_vps.sh nie istnieje (pomijam)"
+          fi
+
+  # ZADANIE 2: Testowanie Dockera (Budowa i Uruchomienie)
+  docker-check:
+    runs-on: ubuntu-latest
+    # Potrzebujemy kodu, żeby zbudować obraz
+    steps:
+      - name: Pobranie kodu
+        uses: actions/checkout@v4
+
+      - name: 🐳 Budowa Obrazu Docker (Build Test)
+        run: |
+          echo "🔨 Buduję obraz..."
+          docker build -t test-scraper .
+
+      - name: 🚀 Testowe uruchomienie Kontenera (Run Test)
+        run: |
+          echo "🏃 Odpalam kontener na chwilę (Smoke Test)..."
+          # Uruchamiamy z limitem 1 strony i 60 sekund
+          # Dzięki temu sprawdzimy czy program startuje, importuje biblioteki i kończy pracę
+          docker run --rm \
+            -e MAX_PAGES=1 \
+            -e MAX_EXECUTION_TIME=60 \
+            -e OUTPUT_FILE="test_run.csv" \
+            test-scraper
+          
+          echo "✅ Kontener uruchomił się i zakończył poprawnie!"

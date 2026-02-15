@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2129
 
 # --- KONFIGURACJA ---
 CDir="$(cd "$(dirname "$0")" && pwd)"
@@ -34,7 +35,7 @@ echo "--- Python zakończył pracę. Rozpoczynam synchronizację... ---" >> "$LO
 
 # 4. ZATWIERDZANIE ZMIAN
 # WAŻNE: Dodajemy tylko pliki CSV (bazy danych), żeby nie wysyłać logów do GitHuba!
-git add *.csv >> "$LOGfile" 2>&1
+git add ./*.csv >> "$LOGfile" 2>&1
 
 # Sprawdzamy czy są zmiany w CSV. Jeśli nie ma, nie robimy pustego commita.
 if git diff --cached --quiet; then
