@@ -37,6 +37,18 @@ jobs:
           [ -f run_rpi.sh ] && shellcheck run_rpi.sh
           [ -f run_vps.sh ] && shellcheck run_vps.sh || true
 
+      - name: 🔍 Debug run_vps.sh
+        run: |
+          echo "===== run_vps.sh (z numerami linii) ====="
+          nl -ba run_vps.sh | sed -n '1,120p'
+
+          echo "===== szukam << / <<< / konfliktów ====="
+          grep -nE '<<|<<<|<<<<<<<|>>>>>>>' run_vps.sh || echo "Brak << w run_vps.sh"
+
+          echo "===== bash -n run_vps.sh ====="
+          bash -n run_vps.sh || echo "bash -n wykrył błąd składni"
+
+
       # 3. TESTY URUCHOMIENIOWE (SMOKE TESTS)
       - name: 🧪 Testowe odpalenie skryptów .sh
         run: |
