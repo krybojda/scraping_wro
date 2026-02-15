@@ -9,6 +9,7 @@ cd "$(dirname "$0")"
 mkdir -p logs
 LOGFILE="logs/log_$(date +%F).txt"
 
+
 # Sprzatanie kontenera nawet gdy skrypt zakonczy sie bledem lub time-outem
 cleanup() {
   docker compose down --remove-orphans >/dev/null 2>&1 || true
