@@ -3,11 +3,12 @@
 set -euo pipefail
 
 # 1. Przejdz do katalogu projektu (ZMIEN TE SCIEZKE NA SWOJA!)
-cd /home/ubuntu/scraping_wro
+cd "$(dirname "$0")"
 
 # Plik logu (jak na RPi – jeden plik dzienny w katalogu logs/)
 mkdir -p logs
 LOGFILE="logs/log_$(date +%F).txt"
+
 
 # Sprzatanie kontenera nawet gdy skrypt zakonczy sie bledem lub time-outem
 cleanup() {
