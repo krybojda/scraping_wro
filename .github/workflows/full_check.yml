@@ -51,6 +51,7 @@ jobs:
 
       # 3. TESTY URUCHOMIENIOWE (SMOKE TESTS)
       - name: 🧪 Testowe odpalenie skryptów .sh
+        shell: bash
         run: |
           # Nadajemy uprawnienia wykonywania
           chmod +x run_rpi.sh run_vps.sh
@@ -66,15 +67,13 @@ jobs:
 
           echo "---------------------------------------------------"
           echo "▶️ TEST 1: Odpalam run_rpi.sh (Limit 20s)..."
-          
-          # Uruchamiamy z timeoutem. 
-          # Jeśli skrypt zadziała i timeout go ubije -> zwraca kod 124 (SUKCES dla nas)
-          # Jeśli skrypt się wywali sam z siebie -> zwraca kod błędu (PORAŻKA)
-          timeout 20s ./run_rpi.sh || code=$?
-          
-          if [[ $code -eq 124 ]]; then
+
+          timeout 20s ./run_rpi.sh
+          code=$?
+
+          if [ "$code" -eq 124 ]; then
             echo "✅ run_rpi.sh działał stabilnie i został zatrzymany przez timeout."
-          elif [[ $code -eq 0 ]]; then
+          elif [ "$code" -eq 0 ]; then
             echo "✅ run_rpi.sh zakończył pracę poprawnie przed czasem."
           else
             echo "❌ BŁĄD: run_rpi.sh wyrzucił błąd krytyczny (Exit Code: $code)"
@@ -83,19 +82,19 @@ jobs:
 
           echo "---------------------------------------------------"
           echo "▶️ TEST 2: Odpalam run_vps.sh (Limit 20s)..."
-          
-          # To samo dla VPS. 
-          # Uwaga: sudo w GitHub Actions działa bez hasła, więc sudo chown przejdzie.
-          timeout 20s ./run_vps.sh || code=$?
 
-          if [[ $code -eq 124 ]]; then
+          timeout 20s ./run_vps.sh
+          code=$?
+
+          if [ "$code" -eq 124 ]; then
             echo "✅ run_vps.sh działał stabilnie i został zatrzymany przez timeout."
-          elif [[ $code -eq 0 ]]; then
+          elif [ "$code" -eq 0 ]; then
             echo "✅ run_vps.sh zakończył pracę poprawnie przed czasem."
           else
             echo "❌ BŁĄD: run_vps.sh wyrzucił błąd krytyczny (Exit Code: $code)"
             exit 1
           fi
+
 
   docker-check:
     runs-on: ubuntu-latest
