@@ -53,6 +53,9 @@ jobs:
       - name: 🧪 Testowe odpalenie skryptów .sh
         shell: bash
         run: |
+          # WYŁĄCZAMY -e, bo timeout (124) jest u nas OK
+          set +e
+
           # Nadajemy uprawnienia wykonywania
           chmod +x run_rpi.sh run_vps.sh
 
@@ -94,6 +97,10 @@ jobs:
             echo "❌ BŁĄD: run_vps.sh wyrzucił błąd krytyczny (Exit Code: $code)"
             exit 1
           fi
+
+          # Jeśli doszliśmy tutaj, oba testy są OK
+          exit 0
+
 
 
   docker-check:
