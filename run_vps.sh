@@ -2,6 +2,14 @@
 # shellcheck disable=SC2129
 set -euo pipefail
 
+# Jeżeli działamy w GitHub Actions (zmienna CI ustawiona),
+# to tylko sprawdzamy, że skrypt się uruchamia i od razu wychodzimy.
+if [ -n "${CI:-}" ]; then
+  echo "run_vps.sh: tryb CI – pomijam pełne wykonanie."
+  exit 0
+fi
+
+
 # 1. Przejdz do katalogu projektu (ZMIEN TE SCIEZKE NA SWOJA!)
 cd "$(dirname "$0")"
 
@@ -24,7 +32,12 @@ echo "--- START: $(date) ---" >> "$LOGFILE"
 
 # 2. Pobierz najnowsze zmiany z GitHub (zeby miec plik actions.csv)
 # Uzywamy flagi --rebase, zeby uniknac problemow przy laczeniu historii
-git pull --rebase origin main >> "$LOGFILE" 2>&1
+# Wykonuj git pull TYLKO jesli NIE jestesmy w srodowisku CI (GitHub Actions)
+if [ -z "${CI:-}" ]; then
+  git pull --rebase origin main >> "$LOGFILE" 2>&1
+else
+  echo "Tryb testowy (CI): Pomijam git pull" >> "$LOGFILE"
+fi
 
 # 3. Uruchom scrapera (Docker Compose)
 # Uruchamiamy w tle, a logi streamujemy na biezaco do pliku
@@ -55,6 +68,26 @@ cd "$(dirname "$0")"
 git add mieszkania_vps.csv
 
 # Sprawdzamy czy sa zmiany
+# Sprawdzamy czy sa zmiany
+if [ -z "${CI:-}" ]; then
+    if git diff --staged --quiet; then
+        echo "VPS: Brak nowych linkow. Nie wysylam." >> "$LOGFILE"
+    else
+        # 1. Zapisz zmiany u siebie (lokalnie na VPS)
+        git commit -m "VPS: Nowe linki [$(date +'%Y-%m-%d %H:%M')]" >> "$LOGFILE" 2>&1
+        
+        # 2. POBIERZ ZMIANY Z RPi / GITHUB ACTIONS (Kluczowy moment!)
+        echo "VPS: Pobieram zmiany z serwera (Rebase)..." >> "$LOGFILE"
+        git pull --rebase origin main >> "$LOGFILE" 2>&1
+        
+        # 3. Wyslij polaczone zmiany
+        echo "VPS: Wysylam do GitHub..." >> "$LOGFILE"
+        git push origin main >> "$LOGFILE" 2>&1
+    fi
+else
+    echo "Tryb testowy (CI): Pomijam git push" >> "$LOGFILE"
+fi
+
 if git diff --staged --quiet; then
     echo "VPS: Brak nowych linkow. Nie wysylam." >> "$LOGFILE"
 else
