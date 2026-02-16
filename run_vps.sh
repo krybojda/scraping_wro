@@ -2,6 +2,14 @@
 # shellcheck disable=SC2129
 set -euo pipefail
 
+# Jeżeli działamy w GitHub Actions (zmienna CI ustawiona),
+# to tylko sprawdzamy, że skrypt się uruchamia i od razu wychodzimy.
+if [ -n "${CI:-}" ]; then
+  echo "run_vps.sh: tryb CI – pomijam pełne wykonanie."
+  exit 0
+fi
+
+
 # 1. Przejdz do katalogu projektu (ZMIEN TE SCIEZKE NA SWOJA!)
 cd "$(dirname "$0")"
 
