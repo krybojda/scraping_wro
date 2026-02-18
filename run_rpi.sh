@@ -44,16 +44,20 @@ if git diff --quiet && git diff --staged --quiet; then
     exit 0
 fi
 
+# 5. SYNCHRONIZACJA KOŃCOWA (To łączy pracę Node 1 i Node 2)
+# Jeśli działamy w CI (tryb testowy), to nie wysyłamy zmian, ale w normalnym trybie (TRYB_MASTER=true) wysyłamy.
 if [ -z "${CI:-}" ] || [ "${TRYB_MASTER:-}" = "true" ]; then
 
   echo "Wykryto zmiany i tryb zapisu. Commituję..." >> "$LOGfile"
 
+  # ZATWIERDZANIE ZMIAN (Commit)
   git commit -m "Auto-zapis Node $(hostname): $(date +'%Y-%m-%d %H:%M')" >> "$LOGfile" 2>&1
   
   # 5. SYNCHRONIZACJA KOŃCOWA (To łączy pracę Node 1 i Node 2)
   echo "🔄 [GIT] Pobieranie i łączenie zmian (Rebase)..." >> "$LOGfile"
   git pull --rebase origin main >> "$LOGfile" 2>&1
   
+  # 6. WYSŁANIE DO CHMURY
   echo "📤 [GIT] Wysyłanie do chmury..." >> "$LOGfile"
   git push origin main >> "$LOGfile" 2>&1
 
