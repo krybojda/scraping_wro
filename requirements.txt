@@ -4,3 +4,5 @@ pandas
 fake-useragent
 streamlit
 watchdog
+lxml
+openpyxl
