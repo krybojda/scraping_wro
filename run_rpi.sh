@@ -37,10 +37,17 @@ echo "--- Python zakończył pracę. Rozpoczynam synchronizację... ---" >> "$LO
 # WAŻNE: Dodajemy tylko pliki CSV (bazy danych), żeby nie wysyłać logów do GitHuba!
 git add ./*.csv >> "$LOGfile" 2>&1
 
-# Sprawdzamy czy są zmiany w CSV. Jeśli nie ma, nie robimy pustego commita.
-if git diff --cached --quiet; then
-  echo "💤 [GIT] Brak nowych danych do zapisu." >> "$LOGfile"
-else
+# Sprawdzamy, czy w ogóle mamy coś do wysłania (status gita)
+# Jeśli nie ma zmian w plikach śledzonych, git diff --quiet zwróci 0 (prawda)
+if git diff --quiet && git diff --staged --quiet; then
+    echo "Brak zmian w danych. Nie wysyłam."
+    exit 0
+fi
+
+if [ -z "${CI:-}" ] || [ "${TRYB_MASTER:-}" = "true" ]; then
+
+  echo "Wykryto zmiany i tryb zapisu. Commituję..." >> "$LOGfile"
+
   git commit -m "Auto-zapis Node $(hostname): $(date +'%Y-%m-%d %H:%M')" >> "$LOGfile" 2>&1
   
   # 5. SYNCHRONIZACJA KOŃCOWA (To łączy pracę Node 1 i Node 2)
@@ -49,7 +56,13 @@ else
   
   echo "📤 [GIT] Wysyłanie do chmury..." >> "$LOGfile"
   git push origin main >> "$LOGfile" 2>&1
+
+  echo "Sukces! Dane wysłane na GitHub."
+
+else
+    echo "Tryb testowy (CI bez uprawnień). Zmiany nie zostały wysłane."
 fi
+
 
 echo "=== KONIEC: $(date) ===" >> "$LOGfile"
 # Pusta linia dla czytelności w logu
