@@ -8,15 +8,20 @@ set -euo pipefail
 # Opcjonalnie dispatch po ID zamiast po nazwie pliku:
 #   TARGET_WORKFLOW_ID=123456789 ./wake_actions.sh
 
-# Opcjonalnie: wpisz token na stale (mniej bezpieczne).
+# TRYB "odpalam tylko ./wake_actions.sh":
+# Ustaw raz ponizsze wartosci i potem uruchamiaj samym ./wake_actions.sh
 HARDCODED_TOKEN=""
+DEFAULT_OWNER="krybojda"
+DEFAULT_REPO="scr-wro"
+DEFAULT_WORKFLOW_FILE="combo-scraper.yml"
+DEFAULT_REF="main"
 
 TOKEN="${HARDCODED_TOKEN:-${MY_TOKEN:-${GITHUB_TOKEN:-${TOKEN:-}}}}"
-OWNER="${TARGET_OWNER:-${OWNER:-krybojda}}"
-REPO="${TARGET_REPO:-${REPO:-scr-wro}}"
-WORKFLOW_FILE="${TARGET_WORKFLOW_FILE:-${WORKFLOW_FILE:-combo-scraper.yml}}"
+OWNER="${TARGET_OWNER:-${OWNER:-${DEFAULT_OWNER}}}"
+REPO="${TARGET_REPO:-${REPO:-${DEFAULT_REPO}}}"
+WORKFLOW_FILE="${TARGET_WORKFLOW_FILE:-${WORKFLOW_FILE:-${DEFAULT_WORKFLOW_FILE}}}"
 WORKFLOW_ID="${TARGET_WORKFLOW_ID:-${WORKFLOW_ID:-}}"
-REF="${TARGET_REF:-${REF:-main}}"
+REF="${TARGET_REF:-${REF:-${DEFAULT_REF}}}"
 
 if [ -z "$TOKEN" ]; then
   echo "BLAD: brak tokena. Ustaw MY_TOKEN (lub GITHUB_TOKEN/TOKEN)."
