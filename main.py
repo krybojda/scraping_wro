@@ -2,6 +2,7 @@
 import os
 import random
 import re
+import signal
 import time
 from datetime import datetime
 
@@ -46,10 +47,33 @@ STATS = {
     "skipped": 0,
 }
 
+stop_requested = False
+
+
+def signal_handler(signum, _frame):
+    global stop_requested
+    print(f"\nOTRZYMANO SYGNAL ZATRZYMANIA ({signum}). Koncze bezpiecznie...")
+    stop_requested = True
+
+
+signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)
+
+
+def interruptible_sleep(total_seconds):
+    end_time = time.time() + total_seconds
+    while time.time() < end_time:
+        if stop_requested:
+            return False
+        time.sleep(min(0.5, end_time - time.time()))
+    return True
+
 
 def classify_status(status_key):
     if STATS["captcha"] > 0 or STATS["ban"] > 0:
         return "BLOCKED"
+    if status_key == "manual_stop":
+        return "MANUAL_STOP"
     if status_key == "time_limit":
         return "TIME_LIMIT"
     if status_key == "crash":
@@ -91,6 +115,9 @@ def send_discord_summary(run_status, public_ip):
         color = 15548997
         title = f"RPi Zwiadowca: {run_status}"
         ping_msg = "@everyone Wymagana interwencja."
+    elif run_status == "MANUAL_STOP":
+        color = 16776960
+        title = "RPi Zwiadowca: Zatrzymano recznie"
     elif run_status == "TIME_LIMIT":
         color = 16776960
         title = "RPi Zwiadowca: Koniec czasu"
@@ -144,6 +171,9 @@ def get_public_ip():
 
 def make_request(url):
     """Pobieranie z rotacja User-Agent. Zwraca (soup, status)."""
+    if stop_requested:
+        return None, "MANUAL_STOP"
+
     try:
         headers = {
             "User-Agent": ua.random,
@@ -173,7 +203,9 @@ def get_listing_basic(url):
     """Szybkie pobieranie podstawowych danych (HTML)."""
     try:
         # Losowe opoznienie, zeby udawac czlowieka.
-        time.sleep(random.uniform(2, 5))
+        if not interruptible_sleep(random.uniform(2, 5)):
+            return None, "MANUAL_STOP"
+
         soup, status = make_request(url)
         if status != "OK":
             return None, status
@@ -220,6 +252,10 @@ def main():
     try:
         # GLOWNA PETLA Z LIMITEM STRON
         while page <= MAX_PAGES:
+            if stop_requested:
+                run_status_key = "manual_stop"
+                break
+
             if (time.time() - START_TIME) > MAX_EXECUTION_TIME:
                 print("Koniec czasu.")
                 run_status_key = "time_limit"
@@ -227,6 +263,9 @@ def main():
 
             print(f"Skanuje strone {page}/{MAX_PAGES}...")
             soup, status = make_request(f"{BASE_URL}&page={page}")
+            if status == "MANUAL_STOP":
+                run_status_key = "manual_stop"
+                break
             if status == "BAN":
                 STATS["ban"] += 1
                 break
@@ -255,6 +294,11 @@ def main():
             page_data = []
             blocked = False
             for link in links:
+                if stop_requested:
+                    run_status_key = "manual_stop"
+                    blocked = True
+                    break
+
                 if (time.time() - START_TIME) > MAX_EXECUTION_TIME:
                     run_status_key = "time_limit"
                     blocked = True
@@ -268,6 +312,10 @@ def main():
                     page_data.append(details)
                     continue
 
+                if offer_status == "MANUAL_STOP":
+                    run_status_key = "manual_stop"
+                    blocked = True
+                    break
                 if offer_status == "BAN":
                     STATS["ban"] += 1
                     blocked = True
@@ -317,7 +365,12 @@ def main():
 
             page += 1
             # Przerwa miedzy stronami listingu.
-            time.sleep(random.uniform(5, 30))
+            if not interruptible_sleep(random.uniform(5, 30)):
+                run_status_key = "manual_stop"
+                break
+    except KeyboardInterrupt:
+        run_status_key = "manual_stop"
+        print("Przerwano recznie (KeyboardInterrupt).")
     except Exception as exc:
         run_status_key = "crash"
         print(f"KRYTYCZNY BLAD PETLI: {exc}")
