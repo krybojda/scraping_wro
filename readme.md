@@ -10,3 +10,4 @@ Auto-generated run logs for scraper and processor.
 ## Processor run history
 | Saved at | Node | Found | Saved | Output file | Status |
 | --- | --- | ---: | ---: | --- | --- |
+| 2026-02-19 20:01:22 | 0/1 | 29 | 29 | mieszkania_complete.csv | OK |
