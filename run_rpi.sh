@@ -35,6 +35,7 @@ echo "--- Python zakończył pracę. Rozpoczynam synchronizację... ---" >> "$LO
 
 # 4. PRZYGOTOWANIE PLIKÓW
 git add ./*.csv >> "$LOGfile" 2>&1
+[ -f readme.md ] && git add readme.md >> "$LOGfile" 2>&1
 
 # Sprawdzamy czy są zmiany
 if git diff --quiet && git diff --staged --quiet; then

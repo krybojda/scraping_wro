@@ -58,7 +58,7 @@ docker wait "$CID" >/dev/null 2>&1 || true
 
 # 4. NAPRAWA UPRAWNIEN (Kluczowe dla Dockera!)
 # Docker tworzy pliki jako root. Zmieniamy wlasciciela na obecnego uzytkownika (ubuntu)
-sudo chown "$USER":"$USER" ./*.csv 2>/dev/null
+sudo chown "$USER":"$USER" ./*.csv readme.md 2>/dev/null || true
 
 # 5. Wyslij wyniki (mieszkania_vps.csv) do repozytorium
 # Przechodzimy do folderu (na wszelki wypadek)
@@ -66,6 +66,7 @@ cd "$(dirname "$0")"
 
 # Dodajemy plik wygenerowany przez VPS
 git add mieszkania_vps.csv
+[ -f readme.md ] && git add readme.md
 
 # Sprawdzamy czy sa zmiany
 # Sprawdzamy czy sa zmiany
