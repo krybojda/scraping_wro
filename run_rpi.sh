@@ -42,22 +42,52 @@ if git diff --quiet && git diff --staged --quiet; then
     exit 0
 fi
 
-# 5. WYSYŁANIE (PUSH)
+# 5. WYSYŁANIE (PUSH) Z PĘTLĄ RETRY
 # Działa na RPi (brak CI) LUB na Actions w trybie MASTER
 if [ -z "${CI:-}" ] || [ "${TRYB_MASTER:-}" = "true" ]; then
 
   echo "Wykryto zmiany i tryb zapisu. Commituję..." | tee -a "$LOGfile"
-
   git commit -m "Auto-zapis Node $(hostname): $(date +'%Y-%m-%d %H:%M')" >> "$LOGfile" 2>&1
-  
-  echo "🔄 [GIT] Pobieranie i łączenie zmian (Rebase)..." >> "$LOGfile"
-  # Tutaj pull jest konieczny, bo w międzyczasie inny bot mógł coś wrzucić
-  git pull --rebase origin main >> "$LOGfile" 2>&1
-  
-  echo "📤 [GIT] Wysyłanie do chmury..." | tee -a "$LOGfile"
-  git push origin main >> "$LOGfile" 2>&1
 
-  echo "✅ Sukces! Dane wysłane na GitHub." | tee -a "$LOGfile"
+  echo "🔄 [GIT] Rozpoczynam procedurę bezpiecznego zapisu (Pętla Retry)..." | tee -a "$LOGfile"
+
+  # --- PĘTLA RETRY (Próbuj do 5 razy) ---
+  MAX_RETRIES=5
+  count=0
+  success=false
+
+  while [ $count -lt $MAX_RETRIES ]; do
+      echo "   Próba synchronizacji $((count+1))/$MAX_RETRIES..." | tee -a "$LOGfile"
+
+      # 1. Pobierz zmiany z serwera (Rebase)
+      if git pull --rebase origin main >> "$LOGfile" 2>&1; then
+          echo "   ✅ Rebase OK." | tee -a "$LOGfile"
+      else
+          echo "   ⚠️ Konflikt przy pobieraniu! Próbuję rozwiązać automatycznie..." | tee -a "$LOGfile"
+          git rebase --abort >> "$LOGfile" 2>&1
+          sleep 5
+          count=$((count+1))
+          continue
+      fi
+
+      # 2. Spróbuj wysłać
+      if git push origin main >> "$LOGfile" 2>&1; then
+          echo "🚀 SUKCES! Dane wysłane bezpiecznie." | tee -a "$LOGfile"
+          success=true
+          break
+      else
+          echo "   ⛔ Push odrzucony (ktoś nas ubiegł?). Czekam i ponawiam..." | tee -a "$LOGfile"
+          count=$((count+1))
+          sleep $((RANDOM % 10 + 5)) # Czekaj losowo 5-15 sekund
+      fi
+  done
+  # --------------------------------------
+
+  if [ "$success" = false ]; then
+      echo "❌ KRYTYCZNY BŁĄD GITA: Nie udało się wysłać zmian po $MAX_RETRIES próbach." | tee -a "$LOGfile"
+      # Opcjonalnie: exit 1, jeśli chcesz, żeby GitHub oznaczył to jako błąd
+      exit 1
+  fi
 
 else
     echo "⚠️ Tryb testowy (CI bez uprawnień). Zmiany nie zostały wysłane." | tee -a "$LOGfile"
