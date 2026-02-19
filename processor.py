@@ -11,6 +11,7 @@ import sys
 import signal  # <--- KLUCZOWA BIBLIOTEKA DO PKILL
 from datetime import datetime
 from fake_useragent import UserAgent
+from stats_readme import append_run_log
 
 # --- KONFIGURACJA ---
 FILE_GH = "mieszkania_gh.csv"
@@ -55,7 +56,7 @@ FINAL_COLUMNS = [
 ]
 
 STATS = {
-    "checked": 0, "saved": 0, "skipped": 0, "captcha": 0, "ban": 0
+    "checked": 0, "found": 0, "saved": 0, "skipped": 0, "captcha": 0, "ban": 0
 }
 
 # Flaga sterująca zatrzymaniem
@@ -307,9 +308,21 @@ def get_full_details_json(url):
         print(f"   ⚠️ Szczegóły błędu: {e}")
         return None, "ERROR"
 
+def classify_processor_status(status_key: str) -> str:
+    if status_key == "manual_stop":
+        return "MANUAL_STOP"
+    if status_key == "crash":
+        return "CRASH"
+    if status_key == "no_input":
+        return "NO_INPUT"
+    if STATS["captcha"] > 0 or STATS["ban"] > 0:
+        return "BLOCKED"
+    return "OK"
+
 def main():
     print(f"--- START RPi PROCESSOR (Safety pkill ready) ---")
     clean_duplicates_in_master()
+    run_status_key = "ok"
 
     dfs = []
     if os.path.exists(FILE_GH): dfs.append(load_csv_safe(FILE_GH))
@@ -318,9 +331,21 @@ def main():
     if not os.path.exists(MASTER_FILE):
         pd.DataFrame(columns=FINAL_COLUMNS).to_csv(MASTER_FILE, index=False)
 
-    if not dfs: 
-        print("Brak plików wejściowych.")
+    if not dfs:
+        run_status_key = "no_input"
+        print("Brak plikow wejsciowych.")
         send_discord_summary()
+        try:
+            append_run_log(
+                component="processor",
+                found=0,
+                saved=0,
+                output_file=MASTER_FILE,
+                status=classify_processor_status(run_status_key),
+                node=f"{NODE_ID}/{TOTAL_NODES}",
+            )
+        except Exception as exc:
+            print(f"Stats README write error: {exc}")
         return
 
     df_raw = pd.concat(dfs, ignore_index=True)
@@ -397,7 +422,10 @@ def main():
 
     total = len(links_to_do)
     print(f"Do przetworzenia (netto): {total}")
-    STATS['checked'] = total
+    assigned_total = sum(1 for idx in range(total) if idx % TOTAL_NODES == NODE_ID)
+    STATS['found'] = total
+    STATS['checked'] = assigned_total
+    print(f"Do sprawdzenia na tym nodzie: {assigned_total}")
 
     try:
         # --- NOWE: Ustawienie licznika błędów ---
@@ -406,6 +434,7 @@ def main():
         for i, row in enumerate(links_to_do):
             # SPRAWDZAMY FLAGĘ NA POCZĄTKU KAŻDEGO OBIEGU
             if stop_requested:
+                run_status_key = "manual_stop"
                 break
             
             if i % TOTAL_NODES != NODE_ID: continue
@@ -415,6 +444,7 @@ def main():
             
             # Jeśli przerwano podczas sleepa:
             if status == "MANUAL_STOP":
+                run_status_key = "manual_stop"
                 break
 
             if status == "OK" and details:
@@ -475,10 +505,27 @@ def main():
 
     except Exception as e:
         print(f"!!! KRYTYCZNY BŁĄD PĘTLI: {e}")
+        run_status_key = "crash"
     finally:
         # TO WYKONA SIĘ ZAWSZE - NAWET PO PKILL
         print("--- Koniec pracy. Wysyłam raport... ---")
-        send_discord_summary()
+        if stop_requested and run_status_key == "ok":
+            run_status_key = "manual_stop"
+
+        run_status = classify_processor_status(run_status_key)
+        send_discord_summary(manual_stop=(run_status == "MANUAL_STOP"))
+
+        try:
+            append_run_log(
+                component="processor",
+                found=STATS["found"],
+                saved=STATS["saved"],
+                output_file=MASTER_FILE,
+                status=run_status,
+                node=f"{NODE_ID}/{TOTAL_NODES}",
+            )
+        except Exception as exc:
+            print(f"Stats README write error: {exc}")
 
 if __name__ == "__main__":
     main()

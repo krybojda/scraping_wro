@@ -32,8 +32,9 @@ jobs:
         run: |
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
-          # Dodajemy i wysyłamy tylko plik dedykowany dla GitHuba
+          # Dodajemy plik z danymi oraz log runu do readme.md
           git add mieszkania_gh.csv
+          [ -f readme.md ] && git add readme.md
           git commit -m "Auto-update danych z GitHub Actions $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "Brak zmian"
           git pull --rebase origin main
           git push

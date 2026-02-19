@@ -11,6 +11,8 @@ import requests
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 
+from stats_readme import append_run_log
+
 # --- KONFIGURACJA ---
 FILE_NAME = os.getenv("OUTPUT_FILE", "mieszkania_wroclaw.csv")
 MAX_EXECUTION_TIME = int(os.getenv("MAX_EXECUTION_TIME", 21600))  # 6 godzin w sekundach
@@ -377,6 +379,16 @@ def main():
     finally:
         run_status = classify_status(run_status_key)
         send_discord_summary(run_status, ip)
+        try:
+            append_run_log(
+                component="scraper",
+                found=STATS["links_found"],
+                saved=STATS["saved"],
+                output_file=FILE_NAME,
+                status=run_status,
+            )
+        except Exception as exc:
+            print(f"Stats README write error: {exc}")
 
 
 if __name__ == "__main__":
