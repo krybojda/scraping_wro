@@ -41,7 +41,7 @@ fi
 # Jeśli Python wygenerował brudnopis ze statystykami, wklejamy go w odpowiednie miejsce
 if [ -f "temp_processor.txt" ]; then
     echo "📝 Wklejam nowe statystyki do readme.md..." | tee -a "$LOGfile"
-    python3 zaktualizuj_readme.py >> "$LOGfile" 2>&1
+    python3 update_readme.py >> "$LOGfile" 2>&1
 fi
 
 # Dodajemy pliki

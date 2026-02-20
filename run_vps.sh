@@ -47,7 +47,7 @@ fi
 
 if [ -f "temp_scraper.txt" ]; then
     echo "📝 Wklejam nowe statystyki Scrapera do readme.md..." | tee -a "$LOGFILE"
-    python3 zaktualizuj_readme.py 2>&1 | tee -a "$LOGFILE"
+    python3 update_readme.py 2>&1 | tee -a "$LOGFILE"
 fi
 
 git add ./*.csv 2>&1 | tee -a "$LOGFILE"
