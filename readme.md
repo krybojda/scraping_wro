@@ -12,3 +12,4 @@ Auto-generated run logs for scraper and processor.
 | Saved at | Node | Found | Saved | Output file | Status |
 | --- | --- | ---: | ---: | --- | --- |
 | 2026-02-19 20:01:22 | 0/1 | 29 | 29 | mieszkania_complete.csv | OK |
+| 2026-02-20 00:21:37 | 0/1 | 10 | 10 | mieszkania_complete.csv | OK |
