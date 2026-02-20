@@ -2,107 +2,123 @@
 # shellcheck disable=SC2129
 set -euo pipefail
 
-# Jeżeli działamy w GitHub Actions (zmienna CI ustawiona),
-# to tylko sprawdzamy, że skrypt się uruchamia i od razu wychodzimy.
 if [ -n "${CI:-}" ]; then
   echo "run_vps.sh: tryb CI – pomijam pełne wykonanie."
   exit 0
 fi
 
-
-# 1. Przejdz do katalogu projektu (ZMIEN TE SCIEZKE NA SWOJA!)
 cd "$(dirname "$0")"
 
-# Plik logu (jak na RPi – jeden plik dzienny w katalogu logs/)
 mkdir -p logs
 LOGFILE="logs/log_$(date +%F).txt"
 
-
-# Sprzatanie kontenera nawet gdy skrypt zakonczy sie bledem lub time-outem
 cleanup() {
   docker compose down --remove-orphans >/dev/null 2>&1 || true
-  if [ -n "${LOG_PID:-}" ] && ps -p "$LOG_PID" >/dev/null 2>&1; then
-    kill "$LOG_PID" >/dev/null 2>&1 || true
-  fi
 }
 trap cleanup EXIT
 
-# Logowanie startu
-echo "--- START: $(date) ---" >> "$LOGFILE"
+echo "--- START: $(date) ---" | tee -a "$LOGFILE"
 
-# 2. Pobierz najnowsze zmiany z GitHub (zeby miec plik actions.csv)
-# Uzywamy flagi --rebase, zeby uniknac problemow przy laczeniu historii
-# Wykonuj git pull TYLKO jesli NIE jestesmy w srodowisku CI (GitHub Actions)
+# 2. Pobierz najnowsze zmiany z GitHub
 if [ -z "${CI:-}" ]; then
-  git pull --rebase origin main >> "$LOGFILE" 2>&1
+  echo "📥 [GIT] Pobieram nowości z serwera..." | tee -a "$LOGFILE"
+  git pull --rebase origin main 2>&1 | tee -a "$LOGFILE"
 else
-  echo "Tryb testowy (CI): Pomijam git pull" >> "$LOGFILE"
+  echo "🚀 Tryb testowy (CI): Pomijam git pull" | tee -a "$LOGFILE"
 fi
 
-# 3. Uruchom scrapera (Docker Compose)
-# Uruchamiamy w tle, a logi streamujemy na biezaco do pliku
-docker compose up -d --build >> "$LOGFILE" 2>&1
+# 3. Uruchom scrapera (Docker Compose) - WIDOCZNY NA EKRANIE
+echo "🐳 [DOCKER] Startuję Zwiadowcę..." | tee -a "$LOGFILE"
 
-CID=$(docker compose ps -q scraper-vps)
-if [ -z "$CID" ]; then
-  echo "Nie znaleziono kontenera scraper-vps" | tee -a "$LOGFILE"
-  exit 1
-fi
+# Zamiast wysyłać w tło, odpalamy normalnie i łapiemy logi przez tee
+docker compose up --build 2>&1 | tee -a "$LOGFILE"
 
-# Stream logow do pliku, bez zatrzymywania kontenera
-docker compose logs -f scraper-vps >> "$LOGFILE" 2>&1 &
-LOG_PID=$!
+# =========================================================================
+# 4. NAPRAWA UPRAWNIEŃ I AKTUALIZACJA README
+# =========================================================================
 
-# Czekaj az kontener skonczy prace
-docker wait "$CID" >/dev/null 2>&1 || true
+echo "🔧 Naprawiam uprawnienia plików po Dockerze..." | tee -a "$LOGFILE"
+sudo chown "$USER":"$USER" ./*.csv readme.md temp_scraper.txt 2>/dev/null || true
 
-# 4. NAPRAWA UPRAWNIEN (Kluczowe dla Dockera!)
-# Docker tworzy pliki jako root. Zmieniamy wlasciciela na obecnego uzytkownika (ubuntu)
-sudo chown "$USER":"$USER" ./*.csv readme.md 2>/dev/null || true
-
-# 5. Wyslij wyniki (mieszkania_vps.csv) do repozytorium
-# Przechodzimy do folderu (na wszelki wypadek)
-cd "$(dirname "$0")"
-
-# Dodajemy plik wygenerowany przez VPS
-git add mieszkania_vps.csv
-[ -f readme.md ] && git add readme.md
-
-# Sprawdzamy czy sa zmiany
-# Sprawdzamy czy sa zmiany
 if [ -z "${CI:-}" ]; then
-    if git diff --staged --quiet; then
-        echo "VPS: Brak nowych linkow. Nie wysylam." >> "$LOGFILE"
-    else
-        # 1. Zapisz zmiany u siebie (lokalnie na VPS)
-        git commit -m "VPS: Nowe linki [$(date +'%Y-%m-%d %H:%M')]" >> "$LOGFILE" 2>&1
-        
-        # 2. POBIERZ ZMIANY Z RPi / GITHUB ACTIONS (Kluczowy moment!)
-        echo "VPS: Pobieram zmiany z serwera (Rebase)..." >> "$LOGFILE"
-        git pull --rebase origin main >> "$LOGFILE" 2>&1
-        
-        # 3. Wyslij polaczone zmiany
-        echo "VPS: Wysylam do GitHub..." >> "$LOGFILE"
-        git push origin main >> "$LOGFILE" 2>&1
-    fi
-else
-    echo "Tryb testowy (CI): Pomijam git push" >> "$LOGFILE"
+    echo "📥 [GIT] Pobieram świeże readme.md..." | tee -a "$LOGFILE"
+    git pull --rebase origin main 2>&1 | tee -a "$LOGFILE"
 fi
 
-if git diff --staged --quiet; then
-    echo "VPS: Brak nowych linkow. Nie wysylam." >> "$LOGFILE"
-else
-    # 1. Zapisz zmiany u siebie (lokalnie na VPS)
-    git commit -m "VPS: Nowe linki [$(date +'%Y-%m-%d %H:%M')]" >> "$LOGFILE" 2>&1
-    
-    # 2. POBIERZ ZMIANY Z RPi / GITHUB ACTIONS (Kluczowy moment!)
-    echo "VPS: Pobieram zmiany z serwera (Rebase)..." >> "$LOGFILE"
-    git pull --rebase origin main >> "$LOGFILE" 2>&1
-    
-    # 3. Wyslij polaczone zmiany
-    echo "VPS: Wysylam do GitHub..." >> "$LOGFILE"
-    git push origin main >> "$LOGFILE" 2>&1
+if [ -f "temp_scraper.txt" ]; then
+    echo "📝 Wklejam nowe statystyki Scrapera do readme.md..." | tee -a "$LOGFILE"
+    python3 zaktualizuj_readme.py 2>&1 | tee -a "$LOGFILE"
 fi
 
-# Logowanie zakonczenia
-echo "=== KONIEC: $(date) ===" >> "$LOGFILE"
+git add ./*.csv 2>&1 | tee -a "$LOGFILE"
+[ -f readme.md ] && git add readme.md 2>&1 | tee -a "$LOGFILE"
+
+if git diff --quiet && git diff --staged --quiet; then
+    echo "🛑 VPS: Brak nowych linków. Nie wysyłam." | tee -a "$LOGFILE"
+    rm -f temp_scraper.txt 2>/dev/null
+    exit 0
+fi
+
+# =========================================================================
+# 5. WYSYŁANIE (PUSH) Z PĘTLĄ RETRY
+# =========================================================================
+
+if [ -z "${CI:-}" ]; then
+  echo "💾 VPS: Wykryto zmiany. Commituję..." | tee -a "$LOGFILE"
+  git commit -m "VPS: Nowe linki [$(date +'%Y-%m-%d %H:%M')]" 2>&1 | tee -a "$LOGFILE"
+
+  echo "🔄 [GIT] Rozpoczynam procedurę bezpiecznego zapisu (Pętla Retry)..." | tee -a "$LOGFILE"
+
+  MAX_RETRIES=5
+  count=0
+  success=false
+
+  while [ $count -lt $MAX_RETRIES ]; do
+      echo "   Próba synchronizacji $((count+1))/$MAX_RETRIES..." | tee -a "$LOGFILE"
+
+      if git pull --rebase origin main 2>&1 | tee -a "$LOGFILE"; then
+          echo "   ✅ Rebase OK." | tee -a "$LOGFILE"
+      else
+          echo "   ⚠️ Konflikt przy pobieraniu! Rozwiązuję inteligentnie..." | tee -a "$LOGFILE"
+          
+          git rebase --abort 2>&1 | tee -a "$LOGFILE" || true
+          git reset --soft HEAD~1 2>&1 | tee -a "$LOGFILE" || true
+          git restore --staged readme.md 2>&1 | tee -a "$LOGFILE" || true
+          git restore readme.md 2>&1 | tee -a "$LOGFILE" || true
+          
+          git pull --rebase origin main 2>&1 | tee -a "$LOGFILE"
+          
+          if [ -f "temp_scraper.txt" ]; then
+              python3 zaktualizuj_readme.py 2>&1 | tee -a "$LOGFILE"
+              git add readme.md 2>&1 | tee -a "$LOGFILE"
+          fi
+          
+          git commit -m "VPS: Nowe linki [$(date +'%Y-%m-%d %H:%M')]" 2>&1 | tee -a "$LOGFILE"
+          
+          count=$((count+1))
+          sleep 5
+          continue
+      fi
+
+      if git push origin main 2>&1 | tee -a "$LOGFILE"; then
+          echo "🚀 SUKCES! Dane wysłane bezpiecznie." | tee -a "$LOGFILE"
+          rm -f temp_scraper.txt 2>/dev/null
+          success=true
+          break
+      else
+          echo "   ⛔ Push odrzucony (ktoś nas ubiegł?). Czekam i ponawiam..." | tee -a "$LOGFILE"
+          count=$((count+1))
+          sleep $((RANDOM % 10 + 5))
+      fi
+  done
+
+  if [ "$success" = false ]; then
+      echo "❌ KRYTYCZNY BŁĄD GITA: Nie udało się wysłać zmian po $MAX_RETRIES próbach." | tee -a "$LOGFILE"
+      exit 1
+  fi
+
+else
+  echo "⚠️ Tryb testowy (CI): Pomijam git push" | tee -a "$LOGFILE"
+fi
+
+echo "=== KONIEC: $(date) ===" | tee -a "$LOGFILE"
