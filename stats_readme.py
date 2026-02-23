@@ -5,6 +5,7 @@ from pathlib import Path
 
 SCRAPER_SECTION = "## Scraper run history"
 PROCESSOR_SECTION = "## Processor run history"
+WEEKDAY_SHORT_PL = ("pn", "wt", "śr", "czw", "pt", "sob", "ndz")
 
 SCRAPER_HEADER = "| Saved at | Found | Saved | Output file | Status |"
 SCRAPER_SEPARATOR = "| --- | ---: | ---: | --- | --- |"
@@ -23,6 +24,11 @@ Auto-generated run logs for scraper and processor.
 def _clean(value: object) -> str:
     text = str(value) if value is not None else ""
     return text.replace("|", "/").replace("\n", " ").strip()
+
+
+def _format_stamp(ts: datetime) -> str:
+    weekday_short = WEEKDAY_SHORT_PL[ts.weekday()]
+    return f"{ts.strftime('%Y-%m-%d')} ({weekday_short}) {ts.strftime('%H:%M:%S')}"
 
 
 def _default_layout() -> str:
@@ -161,7 +167,7 @@ def append_run_log(
     path = Path(readme_path)
     _ensure_layout(path)
 
-    stamp = (saved_at or datetime.now()).strftime("%Y-%m-%d %H:%M:%S")
+    stamp = _format_stamp(saved_at or datetime.now())
     component_key = _clean(component).lower()
 
     if component_key == "processor":
