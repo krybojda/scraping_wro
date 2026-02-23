@@ -23,6 +23,7 @@ Auto-generated run logs for scraper and processor.
 | 2026-02-22 23:21:38 | 287 | 279 | mieszkania_gh.csv | OK |
 | 2026-02-23 11:32:21 | 284 | 276 | mieszkania_gh.csv | OK |
 | 2026-02-23 16:13:29 | 286 | 278 | mieszkania_gh.csv | OK |
+| 2026-02-23 17:47:29 | 910 | 885 | mieszkania_vps.csv | OK |
 
 ## Processor run history
 | Saved at | Node | Found | Saved | Output file | Status |
