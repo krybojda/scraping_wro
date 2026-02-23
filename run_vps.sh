@@ -22,7 +22,7 @@ echo "--- START: $(date) ---" | tee -a "$LOGFILE"
 # 2. Pobierz najnowsze zmiany z GitHub
 if [ -z "${CI:-}" ]; then
   echo "📥 [GIT] Pobieram nowości z serwera..." | tee -a "$LOGFILE"
-  git pull --rebase origin main 2>&1 | tee -a "$LOGFILE"
+  git pull --rebase --autostash origin main 2>&1 | tee -a "$LOGFILE"
 else
   echo "🚀 Tryb testowy (CI): Pomijam git pull" | tee -a "$LOGFILE"
 fi
@@ -42,7 +42,7 @@ sudo chown "$USER":"$USER" ./*.csv readme.md temp_scraper.txt 2>/dev/null || tru
 
 if [ -z "${CI:-}" ]; then
     echo "📥 [GIT] Pobieram świeże readme.md..." | tee -a "$LOGFILE"
-    git pull --rebase origin main 2>&1 | tee -a "$LOGFILE"
+    git pull --rebase --autostash origin main 2>&1 | tee -a "$LOGFILE"
 fi
 
 if [ -f "temp_scraper.txt" ]; then
@@ -76,7 +76,8 @@ if [ -z "${CI:-}" ]; then
   while [ $count -lt $MAX_RETRIES ]; do
       echo "   Próba synchronizacji $((count+1))/$MAX_RETRIES..." | tee -a "$LOGFILE"
 
-      if git pull --rebase origin main 2>&1 | tee -a "$LOGFILE"; then
+      # TUTAJ BYŁ BŁĄD - DODANY ŚREDNIK
+      if git pull --rebase --autostash origin main 2>&1 | tee -a "$LOGFILE"; then
           echo "   ✅ Rebase OK." | tee -a "$LOGFILE"
       else
           echo "   ⚠️ Konflikt przy pobieraniu! Rozwiązuję inteligentnie..." | tee -a "$LOGFILE"
@@ -86,10 +87,10 @@ if [ -z "${CI:-}" ]; then
           git restore --staged readme.md 2>&1 | tee -a "$LOGFILE" || true
           git restore readme.md 2>&1 | tee -a "$LOGFILE" || true
           
-          git pull --rebase origin main 2>&1 | tee -a "$LOGFILE"
+          git pull --rebase --autostash origin main 2>&1 | tee -a "$LOGFILE"
           
           if [ -f "temp_scraper.txt" ]; then
-              python3 zaktualizuj_readme.py 2>&1 | tee -a "$LOGFILE"
+              python3 update_readme.py 2>&1 | tee -a "$LOGFILE"
               git add readme.md 2>&1 | tee -a "$LOGFILE"
           fi
           
