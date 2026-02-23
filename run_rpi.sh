@@ -18,7 +18,7 @@ echo "Public IP: $PUBLIC_IP" >> "$LOGfile"
 # 2. AKTUALIZACJA KODU
 if [ -z "${CI:-}" ]; then
     echo "📥 [GIT] Pobieranie zmian (RPi)..." >> "$LOGfile"
-    git pull --rebase origin main >> "$LOGfile" 2>&1
+    git pull --rebase --autostash origin main 2>&1 | tee -a "$LOGfile"
 else
     echo "🚀 [CI] Pomijam git pull (kod już jest aktualny)" >> "$LOGfile"
 fi
@@ -35,7 +35,7 @@ echo "--- Python zakończył pracę. Rozpoczynam synchronizację... ---" >> "$LO
 
 # Najpierw pobieramy najnowsze zmiany z chmury, żeby mieć świeże readme.md
 if [ -z "${CI:-}" ]; then
-    git pull --rebase origin main >> "$LOGfile" 2>&1
+    git pull --rebase --autostash origin main 2>&1 | tee -a "$LOGfile"
 fi
 
 # Jeśli Python wygenerował brudnopis ze statystykami, wklejamy go w odpowiednie miejsce
@@ -73,7 +73,7 @@ if [ -z "${CI:-}" ] || [ "${TRYB_MASTER:-}" = "true" ]; then
       echo "   Próba synchronizacji $((count+1))/$MAX_RETRIES..." | tee -a "$LOGfile"
 
       # 1. Pobierz zmiany z serwera (Rebase)
-      if git pull --rebase origin main >> "$LOGfile" 2>&1; then
+      if git pull --rebase --autostash origin main 2>&1 | tee -a "$LOGfile"; then
           echo "   ✅ Rebase OK." | tee -a "$LOGfile"
       else
           echo "   ⚠️ Konflikt przy pobieraniu! Rozwiązuję inteligentnie..." | tee -a "$LOGfile"
@@ -84,11 +84,11 @@ if [ -z "${CI:-}" ] || [ "${TRYB_MASTER:-}" = "true" ]; then
           git restore readme.md >> "$LOGfile" 2>&1           # Przywracamy czyste readme z serwera
           
           # Pobieramy czysty kod z serwera jeszcze raz
-          git pull --rebase origin main >> "$LOGfile" 2>&1
+          git pull --rebase --autostash origin main 2>&1 | tee -a "$LOGfile"
           
           # Wklejamy nasze statystyki na najświeższy, pobrany plik
           if [ -f "temp_processor.txt" ]; then
-              python3 zaktualizuj_readme.py >> "$LOGfile" 2>&1
+              python3 update_readme.py >> "$LOGfile" 2>&1
               git add readme.md >> "$LOGfile" 2>&1
           fi
           
