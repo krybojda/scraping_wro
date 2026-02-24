@@ -11,7 +11,6 @@ import sys
 import signal  # <--- KLUCZOWA BIBLIOTEKA DO PKILL
 from datetime import datetime
 from fake_useragent import UserAgent
-from stats_readme import append_run_log
 
 # --- KONFIGURACJA ---
 FILE_GH = "mieszkania_gh.csv"
@@ -296,8 +295,16 @@ def get_full_details_json(url):
             'rok_budowy': get_from_chars(chars, {'build_year', 'year_built'}) or get_from_target(target, ['Build_year']),
             'ogrzewanie': translate_polish(get_from_chars(chars, {'heating'}) or get_from_target(target, ['Heating']), {"urban": "miejskie", "gas": "gazowe", "electric": "elektryczne"}),
             'kaucja': get_from_chars(chars, {'deposit', 'security_deposit'}) or get_from_target(target, ['Deposit']),
-            'pokoje': get_from_target(target, ['Rooms_num', 'rooms']),
-            'stan': translate_polish(get_from_chars(chars, {'construction_status', 'condition'}), {"ready_to_use": "do zamieszkania", "developer": "deweloperski"}),
+            'pokoje': get_from_chars(chars, {'rooms_num', 'room'}) or get_from_target(target, ['Rooms_num', 'rooms']),
+            'stan': translate_polish(
+                get_from_chars(chars, {'construction_status', 'condition', 'finishing_state'}) or get_from_target(target, ['Condition', 'condition', 'finishing_state']), 
+                {
+                    "ready_to_use": "do zamieszkania", 
+                    "developer": "deweloperski",
+                    "to_renovation": "do remontu",
+                    "to_completion": "do wykończenia"
+                }
+            ),
             'lokalizacja': lokalizacja,
             'powierzchnia': area_val,
             'aneks': detect_aneks_flag(full_text),
@@ -336,16 +343,12 @@ def main():
         print("Brak plikow wejsciowych.")
         send_discord_summary()
         try:
-            append_run_log(
-                component="processor",
-                found=0,
-                saved=0,
-                output_file=MASTER_FILE,
-                status=classify_processor_status(run_status_key),
-                node=f"{NODE_ID}/{TOTAL_NODES}",
-            )
+            aktualny_status = classify_processor_status(run_status_key)
+            with open("temp_processor.txt", "w", encoding="utf-8") as f:
+                f.write(f"{STATS['found']},{STATS['saved']},{aktualny_status},{NODE_ID}/{TOTAL_NODES}\n")
+            print("📝 Utworzono brudnopis (temp_processor.txt) dla skryptu Bash.")
         except Exception as exc:
-            print(f"Stats README write error: {exc}")
+            print(f"⚠️ Błąd zapisu brudnopisu: {exc}")
         return
 
     df_raw = pd.concat(dfs, ignore_index=True)
@@ -516,16 +519,11 @@ def main():
         send_discord_summary(manual_stop=(run_status == "MANUAL_STOP"))
 
         try:
-            append_run_log(
-                component="processor",
-                found=STATS["found"],
-                saved=STATS["saved"],
-                output_file=MASTER_FILE,
-                status=run_status,
-                node=f"{NODE_ID}/{TOTAL_NODES}",
-            )
+            with open("temp_processor.txt", "w", encoding="utf-8") as f:
+                f.write(f"{STATS['found']},{STATS['saved']},{run_status},{NODE_ID}/{TOTAL_NODES}\n")
+            print("📝 Utworzono brudnopis (temp_processor.txt) dla skryptu Bash.")
         except Exception as exc:
-            print(f"Stats README write error: {exc}")
+            print(f"⚠️ Błąd zapisu brudnopisu: {exc}")
 
 if __name__ == "__main__":
     main()
