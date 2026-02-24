@@ -297,7 +297,15 @@ def get_full_details_json(url):
             'ogrzewanie': translate_polish(get_from_chars(chars, {'heating'}) or get_from_target(target, ['Heating']), {"urban": "miejskie", "gas": "gazowe", "electric": "elektryczne"}),
             'kaucja': get_from_chars(chars, {'deposit', 'security_deposit'}) or get_from_target(target, ['Deposit']),
             'pokoje': get_from_target(target, ['Rooms_num', 'rooms']),
-            'stan': translate_polish(get_from_chars(chars, {'construction_status', 'condition'}), {"ready_to_use": "do zamieszkania", "developer": "deweloperski"}),
+            'stan': translate_polish(
+                get_from_chars(chars, {'construction_status', 'condition', 'finishing_state'}) or get_from_target(target, ['Condition', 'condition', 'finishing_state']), 
+                {
+                    "ready_to_use": "do zamieszkania", 
+                    "developer": "deweloperski",
+                    "to_renovation": "do remontu",
+                    "to_completion": "do wykończenia"
+                }
+            ),
             'lokalizacja': lokalizacja,
             'powierzchnia': area_val,
             'aneks': detect_aneks_flag(full_text),
