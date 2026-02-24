@@ -1,34 +1,60 @@
 import os
+import sys
 
-plik_readme = 'readme.md'
+# Próbujemy zaimportować Twoją oryginalną funkcję, która ładnie rysuje tabele!
+try:
+    from stats_readme import append_run_log
+except ImportError:
+    print("❌ Błąd: Nie znaleziono pliku stats_readme.py!")
+    sys.exit(1)
 
-# === 1. OBSŁUGA SCRAPERA (Wkleja w środek pliku) ===
-if os.path.exists('temp_scraper.txt'):
-    with open('temp_scraper.txt', 'r') as f:
-        nowy_wpis = f.read().strip() + '\n'
+# ==========================================
+# 1. AKTUALIZACJA TABELI PROCESSORA
+# ==========================================
+if os.path.exists("temp_processor.txt"):
+    try:
+        with open("temp_processor.txt", "r", encoding="utf-8") as f:
+            data = f.read().strip()
         
-    with open(plik_readme, 'r') as f:
-        linie = f.readlines()
-        
-    for i, linia in enumerate(linie):
-        if '## Processor run history' in linia:
-            # Wklej nową linijkę ciut wyżej (nad drugą tabelą)
-            linie.insert(i-1, nowy_wpis)
-            break
-            
-    with open(plik_readme, 'w') as f:
-        f.writelines(linie)
-        
-    print("✅ Dodano statystyki Zwiadowcy (Scrapera) do Readme.")
+        if data:
+            # Rozbijamy brudnopis: "23,23,OK,0/1"
+            parts = data.split(',')
+            if len(parts) >= 4:
+                append_run_log(
+                    component="processor",
+                    found=int(parts[0]),
+                    saved=int(parts[1]),
+                    output_file="mieszkania_complete.csv",
+                    status=parts[2],
+                    node=parts[3]
+                )
+                print("✅ Statystyki Processora dodane do pięknej tabeli Markdown!")
+            else:
+                print("⚠️ Zły format danych w temp_processor.txt")
+    except Exception as e:
+        print(f"Błąd przy aktualizacji processora: {e}")
 
-# === 2. OBSŁUGA PROCESSORA (Wkleja na sam dół) ===
-if os.path.exists('temp_processor.txt'):
-    with open('temp_processor.txt', 'r') as f:
-        nowy_wpis = f.read().strip() + '\n'
+# ==========================================
+# 2. AKTUALIZACJA TABELI SCRAPERA (Jeśli istnieje)
+# ==========================================
+if os.path.exists("temp_scraper.txt"):
+    try:
+        with open("temp_scraper.txt", "r", encoding="utf-8") as f:
+            data = f.read().strip()
         
-    # Skoro tabela Processora jest na końcu pliku, dopisujemy po prostu na sam dół ('a' - append)
-    with open(plik_readme, 'a') as f:
-        f.write(nowy_wpis)
-        
-
-    print("✅ Dodano statystyki Processora do Readme.")
+        if data:
+            parts = data.split(',')
+            if len(parts) >= 4:
+                append_run_log(
+                    component="scraper",
+                    found=int(parts[0]),
+                    saved=int(parts[1]),
+                    output_file="mieszkania_vps.csv", # domyślny plik wyjściowy scrapera
+                    status=parts[2],
+                    node=parts[3]
+                )
+                print("✅ Statystyki Scrapera dodane do pięknej tabeli Markdown!")
+            else:
+                print("⚠️ Zły format danych w temp_scraper.txt")
+    except Exception as e:
+        print(f"Błąd przy aktualizacji scrapera: {e}")
