@@ -49,7 +49,11 @@ Auto-generated run logs for scraper and processor.
 | 2026-02-28 (sob) 10:20:18 | 279 | 271 | mieszkania_gh.csv | OK |
 | 2026-02-28 (sob) 15:19:05 | 278 | 270 | mieszkania_gh.csv | OK |
 | 2026-02-28 (sob) 19:10:15 | 281 | 273 | mieszkania_gh.csv | OK |
+<<<<<<< Updated upstream
 | 2026-03-01 (ndz) 00:14:13 | 279 | 271 | mieszkania_gh.csv | OK |
+=======
+| 2026-03-01 (ndz) 00:14:48 | 900 | 875 | mieszkania_vps.csv | OK |
+>>>>>>> Stashed changes
 
 ## Processor run history
 | Saved at | Node | Found | Saved | Output file | Status |
