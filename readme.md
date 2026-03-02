@@ -56,6 +56,7 @@ Auto-generated run logs for scraper and processor.
 | 2026-03-01 (ndz) 19:15:00 | 284 | 276 | mieszkania_gh.csv | OK |
 | 2026-03-02 (pn) 00:17:55 | 285 | 277 | mieszkania_gh.csv | OK |
 | 2026-03-02 (pn) 11:53:04 | 282 | 274 | mieszkania_gh.csv | OK |
+| 2026-03-02 (pn) 13:39:43 | 900 | 875 | mieszkania_vps.csv | OK |
 
 ## Processor run history
 | Saved at | Node | Found | Saved | Output file | Status |
