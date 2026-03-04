@@ -67,6 +67,7 @@ Auto-generated run logs for scraper and processor.
 | 2026-03-04 (śr) 11:27:23 | 284 | 277 | mieszkania_gh.csv | OK |
 | 2026-03-04 (śr) 20:55:46 | 356 | 346 | mieszkania_gh.csv | OK |
 | 2026-03-04 (śr) 21:15:55 | 900 | 875 | mieszkania_vps.csv | OK |
+| 2026-03-04 (śr) 23:01:27 | 36 | 0 | mieszkania_vps.csv | MANUAL_STOP |
 
 ## Processor run history
 | Saved at | Node | Found | Saved | Output file | Status |
@@ -133,3 +134,4 @@ Auto-generated run logs for scraper and processor.
 | 2026-03-04 (śr) 00:35:15 | 0/1 | 12 | 12 | mieszkania_complete.csv | OK |
 | 2026-03-04 (śr) 11:39:58 | 0/1 | 11 | 11 | mieszkania_complete.csv | OK |
 | 2026-03-04 (śr) 22:14:35 | 0/1 | 67 | 67 | mieszkania_complete.csv | OK |
+| 2026-03-04 (śr) 23:07:27 | 0/1 | 4 | 4 | mieszkania_complete.csv | OK |
