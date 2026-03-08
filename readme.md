@@ -88,6 +88,7 @@ Auto-generated run logs for scraper and processor.
 | 2026-03-08 (ndz) 10:29:53 | 361 | 351 | mieszkania_gh.csv | OK |
 | 2026-03-08 (ndz) 15:28:38 | 358 | 348 | mieszkania_gh.csv | OK |
 | 2026-03-08 (ndz) 19:21:23 | 358 | 348 | mieszkania_gh.csv | OK |
+| 2026-03-09 (pn) 00:24:22 | 356 | 346 | mieszkania_gh.csv | OK |
 
 ## Processor run history
 | Saved at | Node | Found | Saved | Output file | Status |
