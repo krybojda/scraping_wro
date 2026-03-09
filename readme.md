@@ -94,6 +94,7 @@ Auto-generated run logs for scraper and processor.
 | 2026-03-09 (pn) 15:58:40 | 37 | 0 | mieszkania_vps.csv | MANUAL_STOP |
 | 2026-03-09 (pn) 17:13:34 | 913 | 888 | mieszkania_vps.csv | OK |
 | 2026-03-09 (pn) 18:06:20 | 360 | 351 | mieszkania_gh.csv | OK |
+| 2026-03-09 (pn) 20:58:40 | 360 | 351 | mieszkania_gh.csv | OK |
 
 ## Processor run history
 | Saved at | Node | Found | Saved | Output file | Status |
