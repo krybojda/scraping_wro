@@ -200,3 +200,4 @@ Auto-generated run logs for scraper and processor.
 | 2026-03-10 (wt) 19:03:17 | 0/1 | 50 | 49 | mieszkania_complete.csv | OK |
 | 2026-03-10 (wt) 21:08:23 | 0/1 | 11 | 11 | mieszkania_complete.csv | OK |
 | 2026-03-11 (śr) 00:45:11 | 0/1 | 15 | 15 | mieszkania_complete.csv | OK |
+| 2026-03-11 (śr) 09:37:21 | 0/1 | 6 | 6 | mieszkania_complete.csv | OK |
