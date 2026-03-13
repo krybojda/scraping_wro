@@ -24,7 +24,6 @@ Auto-generated run logs for scraper and processor.
 | 2026-02-23 (pn) 11:32:21 | 284 | 276 | mieszkania_gh.csv | OK |
 | 2026-02-23 (pn) 16:13:29 | 286 | 278 | mieszkania_gh.csv | OK |
 | 2026-02-23 (pn) 17:47:29 | 910 | 885 | mieszkania_vps.csv | OK |
-| 2026-02-23 (pn) 20:10:14 | 37 | 0 | mieszkania_vps.csv | MANUAL_STOP |
 | 2026-02-23 (pn) 22:56:21 | 285 | 278 | mieszkania_gh.csv | OK |
 | 2026-02-24 (wt) 01:01:12 | 286 | 278 | mieszkania_gh.csv | OK |
 | 2026-02-24 (wt) 11:57:03 | 285 | 277 | mieszkania_gh.csv | OK |
@@ -67,7 +66,6 @@ Auto-generated run logs for scraper and processor.
 | 2026-03-04 (śr) 11:27:23 | 284 | 277 | mieszkania_gh.csv | OK |
 | 2026-03-04 (śr) 20:55:46 | 356 | 346 | mieszkania_gh.csv | OK |
 | 2026-03-04 (śr) 21:15:55 | 900 | 875 | mieszkania_vps.csv | OK |
-| 2026-03-04 (śr) 23:01:27 | 36 | 0 | mieszkania_vps.csv | MANUAL_STOP |
 | 2026-03-05 (czw) 00:30:50 | 357 | 348 | mieszkania_gh.csv | OK |
 | 2026-03-05 (czw) 09:26:58 | 358 | 348 | mieszkania_gh.csv | OK |
 | 2026-03-05 (czw) 11:37:23 | 356 | 346 | mieszkania_gh.csv | OK |
@@ -91,7 +89,6 @@ Auto-generated run logs for scraper and processor.
 | 2026-03-09 (pn) 00:24:22 | 356 | 346 | mieszkania_gh.csv | OK |
 | 2026-03-09 (pn) 09:31:08 | 356 | 346 | mieszkania_gh.csv | OK |
 | 2026-03-09 (pn) 12:00:10 | 359 | 349 | mieszkania_gh.csv | OK |
-| 2026-03-09 (pn) 15:58:40 | 37 | 0 | mieszkania_vps.csv | MANUAL_STOP |
 | 2026-03-09 (pn) 17:13:34 | 913 | 888 | mieszkania_vps.csv | OK |
 | 2026-03-09 (pn) 18:06:20 | 360 | 351 | mieszkania_gh.csv | OK |
 | 2026-03-09 (pn) 20:58:40 | 360 | 351 | mieszkania_gh.csv | OK |
@@ -114,13 +111,9 @@ Auto-generated run logs for scraper and processor.
 | 2026-03-13 (pt) 09:29:33 | 359 | 349 | mieszkania_gh.csv | OK |
 | 2026-03-13 (pt) 11:32:25 | 363 | 353 | mieszkania_gh.csv | OK |
 | 2026-03-13 (pt) 16:57:37 | 361 | 351 | mieszkania_gh.csv | OK |
-<<<<<<< Updated upstream
-| 2026-03-13 (pt) 18:50:09 | 37 | 0 | mieszkania_vps.csv | MANUAL_STOP |
-| 2026-03-13 (pt) 19:07:05 | 37 | 0 | mieszkania_vps.csv | MANUAL_STOP |
 | 2026-03-13 (pt) 20:32:29 | 909 | 884 | mieszkania_vps.csv | OK |
-=======
 | 2026-03-13 (pt) 20:48:48 | 361 | 351 | mieszkania_gh.csv | OK |
->>>>>>> Stashed changes
+
 
 ## Processor run history
 | Saved at | Node | Found | Saved | Output file | Status |
