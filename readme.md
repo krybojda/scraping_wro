@@ -113,7 +113,12 @@ Auto-generated run logs for scraper and processor.
 | 2026-03-13 (pt) 16:57:37 | 361 | 351 | mieszkania_gh.csv | OK |
 | 2026-03-13 (pt) 20:32:29 | 909 | 884 | mieszkania_vps.csv | OK |
 | 2026-03-13 (pt) 20:48:48 | 361 | 351 | mieszkania_gh.csv | OK |
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
+| 2026-03-14 (sob) 00:28:32 | 359 | 349 | mieszkania_gh.csv | OK |
+>>>>>>> Stashed changes
 
 ## Processor run history
 | Saved at | Node | Found | Saved | Output file | Status |
