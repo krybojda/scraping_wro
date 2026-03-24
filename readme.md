@@ -332,3 +332,4 @@ Auto-generated run logs for scraper and processor.
 | 2026-03-24 (wt) 00:37:29 | 0/1 | 14 | 14 | mieszkania_complete.csv | OK |
 | 2026-03-24 (wt) 08:53:23 | 0/1 | 6 | 6 | mieszkania_complete.csv | OK |
 | 2026-03-24 (wt) 10:47:55 | 0/1 | 7 | 7 | mieszkania_complete.csv | OK |
+| 2026-03-24 (wt) 16:51:35 | 0/1 | 39 | 39 | mieszkania_complete.csv | OK |
