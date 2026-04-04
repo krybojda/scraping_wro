@@ -445,3 +445,4 @@ Auto-generated run logs for scraper and processor.
 | 2026-04-04 (sob) 09:45:41 | 0/1 | 0 | 0 | mieszkania_complete.csv | OK |
 | 2026-04-04 (sob) 11:28:21 | 0/1 | 1 | 1 | mieszkania_complete.csv | OK |
 | 2026-04-04 (sob) 17:31:56 | 0/1 | 12 | 12 | mieszkania_complete.csv | OK |
+| 2026-04-05 (ndz) 01:23:39 | 0/1 | 8 | 8 | mieszkania_complete.csv | OK |
