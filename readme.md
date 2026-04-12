@@ -247,6 +247,7 @@ Auto-generated run logs for scraper and processor.
 | 2026-04-11 (sob) 09:42:43 | 346 | 337 | mieszkania_gh.csv | OK |
 | 2026-04-11 (sob) 17:19:51 | 350 | 341 | mieszkania_gh.csv | OK |
 | 2026-04-12 (ndz) 01:17:13 | 352 | 342 | mieszkania_gh.csv | OK |
+| 2026-04-12 (ndz) 10:09:50 | 351 | 341 | mieszkania_gh.csv | OK |
 
 
 ## Processor run history
