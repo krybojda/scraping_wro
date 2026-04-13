@@ -255,6 +255,7 @@ Auto-generated run logs for scraper and processor.
 =======
 | 2026-04-13 (pn) 11:30:53 | 895 | 871 | mieszkania_vps.csv | OK |
 >>>>>>> Stashed changes
+| 2026-04-13 (pn) 14:20:05 | 37 | 0 | mieszkania_vps.csv | MANUAL_STOP |
 
 
 ## Processor run history
