@@ -267,7 +267,11 @@ Auto-generated run logs for scraper and processor.
 | 2026-04-16 (czw) 01:26:56 | 357 | 347 | mieszkania_gh.csv | OK |
 | 2026-04-16 (czw) 10:30:16 | 360 | 350 | mieszkania_gh.csv | OK |
 | 2026-04-16 (czw) 18:20:02 | 354 | 345 | mieszkania_gh.csv | OK |
+<<<<<<< Updated upstream
 | 2026-04-17 (pt) 01:27:11 | 355 | 345 | mieszkania_gh.csv | OK |
+=======
+| 2026-04-17 (pt) 01:39:30 | 901 | 876 | mieszkania_vps.csv | OK |
+>>>>>>> Stashed changes
 
 
 ## Processor run history
