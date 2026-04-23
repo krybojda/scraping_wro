@@ -301,6 +301,7 @@ Auto-generated run logs for scraper and processor.
 =======
 | 2026-04-23 (czw) 19:24:58 | 891 | 867 | mieszkania_vps.csv | OK |
 >>>>>>> Stashed changes
+| 2026-04-24 (pt) 01:31:34 | 356 | 346 | mieszkania_gh.csv | OK |
 
 
 ## Processor run history
