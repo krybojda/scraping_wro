@@ -341,6 +341,7 @@ Auto-generated run logs for scraper and processor.
 | 2026-05-10 (ndz) 10:48:48 | 351 | 342 | mieszkania_gh.csv | OK |
 | 2026-05-10 (ndz) 17:38:01 | 348 | 340 | mieszkania_gh.csv | OK |
 | 2026-05-11 (pn) 01:32:26 | 354 | 344 | mieszkania_gh.csv | OK |
+| 2026-05-11 (pn) 12:26:12 | 355 | 345 | mieszkania_gh.csv | OK |
 
 
 
