@@ -365,6 +365,7 @@ Auto-generated run logs for scraper and processor.
 | 2026-05-17 (ndz) 12:10:20 | 910 | 885 | mieszkania_vps.csv | OK |
 >>>>>>> Stashed changes
 | 2026-05-17 (ndz) 17:43:53 | 363 | 353 | mieszkania_gh.csv | OK |
+| 2026-05-18 (pn) 01:38:34 | 362 | 352 | mieszkania_gh.csv | OK |
 
 
 
