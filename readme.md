@@ -445,6 +445,7 @@ Auto-generated run logs for scraper and processor.
 | 2026-06-13 (sob) 02:13:06 | 353 | 344 | mieszkania_gh.csv | OK |
 | 2026-06-13 (sob) 12:00:09 | 349 | 339 | mieszkania_gh.csv | OK |
 | 2026-06-13 (sob) 18:15:48 | 348 | 339 | mieszkania_gh.csv | OK |
+| 2026-06-14 (ndz) 01:46:31 | 350 | 340 | mieszkania_gh.csv | OK |
 
 
 
