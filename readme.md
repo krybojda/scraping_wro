@@ -878,3 +878,4 @@ Auto-generated run logs for scraper and processor.
 | 2026-06-12 (pt) 20:38:07 | 0/1 | 51 | 51 | mieszkania_complete.csv | OK |
 | 2026-06-13 (sob) 02:22:52 | 0/1 | 8 | 8 | mieszkania_complete.csv | OK |
 | 2026-06-13 (sob) 12:08:58 | 0/1 | 8 | 8 | mieszkania_complete.csv | OK |
+| 2026-06-13 (sob) 18:32:43 | 0/1 | 15 | 15 | mieszkania_complete.csv | OK |
