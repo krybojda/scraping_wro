@@ -450,6 +450,7 @@ Auto-generated run logs for scraper and processor.
 | 2026-06-14 (ndz) 18:25:06 | 348 | 338 | mieszkania_gh.csv | OK |
 | 2026-06-15 (pn) 01:36:13 | 0 | 0 | mieszkania_gh.csv | BLOCKED |
 | 2026-06-15 (pn) 15:06:29 | 347 | 338 | mieszkania_gh.csv | OK |
+| 2026-06-15 (pn) 21:12:33 | 353 | 343 | mieszkania_gh.csv | OK |
 
 
 
