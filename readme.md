@@ -491,6 +491,7 @@ Auto-generated run logs for scraper and processor.
 | 2026-06-28 (ndz) 11:57:24 | 356 | 346 | mieszkania_gh.csv | OK |
 | 2026-06-28 (ndz) 18:05:19 | 358 | 348 | mieszkania_gh.csv | OK |
 | 2026-06-29 (pn) 01:45:36 | 358 | 347 | mieszkania_gh.csv | OK |
+| 2026-06-29 (pn) 13:51:06 | 359 | 349 | mieszkania_gh.csv | OK |
 
 
 
