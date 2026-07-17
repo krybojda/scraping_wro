@@ -547,6 +547,7 @@ Auto-generated run logs for scraper and processor.
 | 2026-07-16 (czw) 10:54:57 | 319 | 310 | mieszkania_gh.csv | HTTP_ERROR |
 | 2026-07-16 (czw) 18:13:33 | 356 | 346 | mieszkania_gh.csv | OK |
 | 2026-07-17 (pt) 01:37:25 | 358 | 348 | mieszkania_gh.csv | OK |
+| 2026-07-17 (pt) 10:54:20 | 359 | 349 | mieszkania_gh.csv | OK |
 
 
 
