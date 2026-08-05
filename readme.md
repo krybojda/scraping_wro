@@ -586,6 +586,7 @@ Auto-generated run logs for scraper and processor.
 | 2026-08-04 (wt) 11:37:46 | 362 | 352 | mieszkania_gh.csv | OK |
 | 2026-08-04 (wt) 18:51:56 | 353 | 344 | mieszkania_gh.csv | OK |
 | 2026-08-05 (śr) 01:19:20 | 0 | 0 | mieszkania_gh.csv | BLOCKED |
+| 2026-08-05 (śr) 11:35:06 | 355 | 345 | mieszkania_gh.csv | OK |
 
 
 
