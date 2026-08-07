@@ -7,6 +7,7 @@ LOGfile="$CDir/logs/log_$(date +'%Y-%m-%d').txt"
 
 if [ -f "$CDir/.env" ]; then
     set -a
+    # shellcheck disable=SC1091
     . "$CDir/.env"
     set +a
 fi
