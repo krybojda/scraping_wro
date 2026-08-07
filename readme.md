@@ -1,4 +1,4 @@
-# 🏠 Otodom Real Estate Cluster (Scraper & Processor)
+# 🏠 Scraper mieszkań
 
 System zbiera i przetwarza oferty wynajmu mieszkań z Otodom. Składa się ze scrapera zapisującego podstawowe dane ofert oraz processora, który wzbogaca nowe rekordy o dane odczytane z JSON-a osadzonego na stronie.
 
