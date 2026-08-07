@@ -11,6 +11,7 @@ services:
       # TUTAJ DEFINIUJESZ WARUNKI DLA VPS:
       - MAX_EXECUTION_TIME=21600       # 6 godzin
       - OUTPUT_FILE=mieszkania_vps.csv # Osobny plik!
+      - DISCORD_URL=${DISCORD_URL}
       - TZ=Europe/Warsaw # Ustaw strefę czasową, żeby logi miały poprawne znaczniki czasu
     # Opcjonalnie: restartuj kontener tylko ręcznie (nie chcemy pętli nieskończonej w tle)
     restart: "no"

@@ -151,7 +151,9 @@ def send_discord_summary(run_status, public_ip):
     }
     payload = {"content": ping_msg, "embeds": [embed]}
     try:
-        requests.post(DISCORD_URL, json=payload, timeout=10)
+        response = requests.post(DISCORD_URL, json=payload, timeout=10)
+        if response.status_code >= 300:
+            print(f"Discord webhook returned {response.status_code}: {response.text[:200]}")
     except Exception as exc:
         print(f"Discord webhook error: {exc}")
 

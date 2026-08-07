@@ -9,6 +9,12 @@ fi
 
 cd "$(dirname "$0")"
 
+if [ -f ".env" ]; then
+  set -a
+  . ./.env
+  set +a
+fi
+
 mkdir -p logs
 LOGFILE="logs/log_$(date +%F).txt"
 

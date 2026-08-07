@@ -144,8 +144,12 @@ def send_discord_summary(manual_stop=False):
         "footer": {"text": f"Node {NODE_ID} • {datetime.now().strftime('%H:%M')}"}
     }
     payload = {"content": ping_msg, "embeds": [embed]}
-    try: requests.post(DISCORD_URL, json=payload, timeout=10)
-    except: pass
+    try:
+        response = requests.post(DISCORD_URL, json=payload, timeout=10)
+        if response.status_code >= 300:
+            print(f"Discord webhook returned {response.status_code}: {response.text[:200]}")
+    except Exception as exc:
+        print(f"Discord webhook error: {exc}")
 
 def send_discord_alert(offer, type="Nowa oferta"):
     if not DISCORD_URL or "TWOJ_ID" in DISCORD_URL: return False
@@ -161,7 +165,8 @@ def send_discord_alert(offer, type="Nowa oferta"):
         "footer": {"text": f"Bot RPi (Node {NODE_ID})"}
     }
     try: requests.post(DISCORD_URL, json={"embeds": [embed]}, timeout=15)
-    except: pass
+    except Exception as exc:
+        print(f"Discord alert webhook error: {exc}")
 
 def as_str(val) -> str:
     if val is None: return ""
