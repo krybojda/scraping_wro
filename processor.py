@@ -43,7 +43,7 @@ else:
     BLACKLIST_FILE = "blacklist.csv"
     print(f"🤖 Tryb SOLO. Zapisuję do: {MASTER_FILE}")
 
-DISCORD_URL = "https://discord.com/api/webhooks/1470223047867764800/m08l3piGAiD5sSXnl2bTgJX1LRzopi9WBjSkqUp5s9eXRuXR6o4exmVLChVdWRIIk_R2"
+DISCORD_URL = os.getenv("DISCORD_URL", "")
 
 ua = UserAgent()
 
@@ -114,7 +114,7 @@ def send_discord_summary(manual_stop=False):
     print(f"   🗑️ Pominięto:        {STATS['skipped']}")
     print("="*40 + "\n")
 
-    if "TWOJ_ID" in DISCORD_URL: return
+    if not DISCORD_URL or "TWOJ_ID" in DISCORD_URL: return
     
     ping_msg = ""
     if STATS['captcha'] > 0 or STATS['ban'] > 0:
@@ -148,7 +148,7 @@ def send_discord_summary(manual_stop=False):
     except: pass
 
 def send_discord_alert(offer, type="Nowa oferta"):
-    if "TWOJ_ID" in DISCORD_URL: return False
+    if not DISCORD_URL or "TWOJ_ID" in DISCORD_URL: return False
     color = 5814783 if type == "Nowa oferta" else 15548997
     embed = {
         "title": f"🔔 {type}: {offer.get('tytul', 'Ogłoszenie')}",

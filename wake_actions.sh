@@ -10,14 +10,15 @@ set -euo pipefail
 
 # TRYB "odpalam tylko ./wake_actions.sh":
 # Ustaw raz ponizsze wartosci i potem uruchamiaj samym ./wake_actions.sh
-HARDCODED_TOKEN="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"
+
+TOKEN="${WORKFLOW_DISPATCH_TOKEN:-${MY_TOKEN:-${GITHUB_TOKEN:-}}}"
 DEFAULT_OWNER="krybojda"
 DEFAULT_REPO="scr-wro"
 DEFAULT_WORKFLOW_FILE="combo-scraper.yml"
 DEFAULT_REF="main"
 
 # KONFIGURACJA:
-TOKEN="${HARDCODED_TOKEN:-${MY_TOKEN:-${GITHUB_TOKEN:-${TOKEN:-}}}}"
+HARDCODED_TOKEN="${HARDCODED_TOKEN:-${MY_TOKEN:-${GITHUB_TOKEN:-${TOKEN:-}}}}"
 OWNER="${TARGET_OWNER:-${OWNER:-${DEFAULT_OWNER}}}"
 REPO="${TARGET_REPO:-${REPO:-${DEFAULT_REPO}}}"
 WORKFLOW_FILE="${TARGET_WORKFLOW_FILE:-${WORKFLOW_FILE:-${DEFAULT_WORKFLOW_FILE}}}"
