@@ -5,6 +5,13 @@
 CDir="$(cd "$(dirname "$0")" && pwd)"
 LOGfile="$CDir/logs/log_$(date +'%Y-%m-%d').txt"
 
+if [ -f "$CDir/.env" ]; then
+    set -a
+    # shellcheck disable=SC1091
+    . "$CDir/.env"
+    set +a
+fi
+
 mkdir -p "$CDir/logs"
 cd "$CDir" || { echo "❌ BŁĄD: Nie znaleziono katalogu $CDir" >> "/var/log/syslog"; exit 1; }
 
