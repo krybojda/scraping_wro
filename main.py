@@ -21,11 +21,7 @@ BASE_URL = (
     "wroclaw/wroclaw/wroclaw?limit=36&ownerTypeSingleSelect=ALL&by=DEFAULT"
     "&direction=DESC&viewType=listing"
 )
-DISCORD_URL = os.getenv(
-    "DISCORD_URL",
-    "https://discord.com/api/webhooks/1470223047867764800/"
-    "m08l3piGAiD5sSXnl2bTgJX1LRzopi9WBjSkqUp5s9eXRuXR6o4exmVLChVdWRIIk_R2",
-)
+DISCORD_URL = os.getenv("DISCORD_URL", "")
 
 # Definiujemy sztywna liste kolumn - to jest "bezpiecznik".
 FINAL_COLUMNS = ["data_pobrania", "tytul", "cena", "metraz", "link"]
