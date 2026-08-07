@@ -44,6 +44,8 @@ else:
     print(f"🤖 Tryb SOLO. Zapisuję do: {MASTER_FILE}")
 
 DISCORD_URL = os.getenv("DISCORD_URL", "")
+if DISCORD_URL:
+    DISCORD_URL = DISCORD_URL.strip()
 
 ua = UserAgent()
 
@@ -114,7 +116,12 @@ def send_discord_summary(manual_stop=False):
     print(f"   🗑️ Pominięto:        {STATS['skipped']}")
     print("="*40 + "\n")
 
-    if not DISCORD_URL or "TWOJ_ID" in DISCORD_URL: return
+    if not DISCORD_URL:
+        print("Discord webhook skipped: DISCORD_URL is empty or not passed to the process.")
+        return
+    if "TWOJ_ID" in DISCORD_URL:
+        print("Discord webhook skipped: DISCORD_URL still contains placeholder TWOJ_ID.")
+        return
     
     ping_msg = ""
     if STATS['captcha'] > 0 or STATS['ban'] > 0:
@@ -148,11 +155,18 @@ def send_discord_summary(manual_stop=False):
         response = requests.post(DISCORD_URL, json=payload, timeout=10)
         if response.status_code >= 300:
             print(f"Discord webhook returned {response.status_code}: {response.text[:200]}")
+        else:
+            print(f"Discord webhook sent successfully: HTTP {response.status_code}")
     except Exception as exc:
         print(f"Discord webhook error: {exc}")
 
 def send_discord_alert(offer, type="Nowa oferta"):
-    if not DISCORD_URL or "TWOJ_ID" in DISCORD_URL: return False
+    if not DISCORD_URL:
+        print("Discord alert skipped: DISCORD_URL is empty or not passed to the process.")
+        return False
+    if "TWOJ_ID" in DISCORD_URL:
+        print("Discord alert skipped: DISCORD_URL still contains placeholder TWOJ_ID.")
+        return False
     color = 5814783 if type == "Nowa oferta" else 15548997
     embed = {
         "title": f"🔔 {type}: {offer.get('tytul', 'Ogłoszenie')}",
@@ -164,7 +178,12 @@ def send_discord_alert(offer, type="Nowa oferta"):
         ],
         "footer": {"text": f"Bot RPi (Node {NODE_ID})"}
     }
-    try: requests.post(DISCORD_URL, json={"embeds": [embed]}, timeout=15)
+    try:
+        response = requests.post(DISCORD_URL, json={"embeds": [embed]}, timeout=15)
+        if response.status_code >= 300:
+            print(f"Discord alert webhook returned {response.status_code}: {response.text[:200]}")
+        else:
+            print(f"Discord alert webhook sent successfully: HTTP {response.status_code}")
     except Exception as exc:
         print(f"Discord alert webhook error: {exc}")
 
