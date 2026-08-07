@@ -1,6 +1,72 @@
-# Scraping Wro stats
+# 🏠 Otodom Real Estate Cluster (Scraper & Processor)
 
-Auto-generated run logs for scraper and processor.
+System zbiera i przetwarza oferty wynajmu mieszkań z Otodom. Składa się ze scrapera zapisującego podstawowe dane ofert oraz processora, który wzbogaca nowe rekordy o dane odczytane z JSON-a osadzonego na stronie.
+
+## 🏗️ Przepływ danych
+
+1. **Scraper — main.py** pobiera kolejne strony listingu, a następnie podstawowe dane każdej znalezionej oferty: datę pobrania, tytuł, cenę, metraż i link. Zapisuje je dopisywaniem do pliku wskazanego przez zmienną `OUTPUT_FILE`.
+2. **Processor — processor.py** odczytuje `mieszkania_gh.csv` i `mieszkania_vps.csv`, normalizuje linki, pomija rekordy już zapisane lub znajdujące się na czarnej liście, a następnie pobiera szczegóły oferty z `__NEXT_DATA__`. Każdy poprawny rekord jest zapisywany od razu do pliku docelowego.
+3. **Synchronizacja** jest realizowana przez `run_rpi.sh` i `run_vps.sh`: skrypty pobierają zmiany z GitHub, wykonują zadanie, commitują wynik i ponawiają synchronizację maksymalnie pięć razy w razie kolizji.
+
+Scraper nie deduplikuje ofert — robi to processor. Pliki wejściowe nie zawierają wyłącznie linków; zawierają także podstawowe dane zebrane przez scraper.
+
+## 🌐 Węzły i tryby pracy
+
+| Węzeł | Zadanie | Wynik |
+| --- | --- | --- |
+| GitHub Actions | Krótki cykl scrapera w Dockerze | `mieszkania_gh.csv` |
+| VPS | Scraper uruchamiany przez Docker Compose | `mieszkania_vps.csv` |
+| Raspberry Pi / host processora | Pobieranie pełnych szczegółów ofert | `mieszkania_complete.csv` w trybie solo |
+
+Aktualna konfiguracja `config_local.py` działa w trybie solo (`NODE_ID=0`, `TOTAL_NODES=1`). Kod obsługuje także tryb klastra: każdy node zapisuje wtedy do `mieszkania_node_N.csv` i `blacklist_node_N.csv`, a pliki node'ów scala ręcznie `file_merge.py`.
+
+### Konfiguracja node'a
+
+Do konfiguracji własnego node'a skopiuj lub zmień nazwę pliku `config_local.py.example` na `config_local.py`, a następnie uzupełnij:
+
+- `NODE_ID` — unikalny numer tego node'a, od `0` do `TOTAL_NODES - 1`.
+- `TOTAL_NODES` — łączną liczbę node'ów processora.
+
+Plik `config_local.py` jest odczytywany przez processor przy uruchomieniu. Wartości `0` i `1` oznaczają pracę solo oraz zapis do `mieszkania_complete.csv`; dla większej liczby node'ów processor rozdziela oferty między node'y według ich indeksów i zapisuje do osobnych plików node'ów.
+
+Workflow GitHub Actions uruchamia scraper zgodnie z cronem GitHub Actions, czyli w strefie UTC. Zmienna `TZ=Europe/Warsaw` jest ustawiona dla usługi VPS, lecz nie zmienia strefy harmonogramu GitHub.
+
+## 🛡️ Ograniczanie ryzyka blokad
+
+- Scraper rotuje nagłówek User-Agent i stosuje losowe przerwy między żądaniami.
+- CAPTCHA oraz odpowiedzi 403 i 429 są wykrywane. Scraper kończy wówczas bieżący cykl; processor po 429 czeka 180 sekund przed przejściem do kolejnej oferty.
+- Processor dopisuje do czarnej listy oferty, których nie udało się przetworzyć z wybranych powodów, np. błędu HTTP, braku JSON-a lub pustych danych. CAPTCHA, 403 i 429 nie są do niej automatycznie dopisywane.
+- Processor zatrzymuje pętlę po pięciu kolejnych CAPTCHA lub banach. Mechanizm jest sekwencyjny — nie używa wątków ani nie obchodzi zabezpieczeń serwisu.
+
+## 🔔 Powiadomienia i statusy
+
+Scraper wysyła na Discord raport końcowy, a processor dodatkowo wysyła alert dla każdej nowo zapisanej oferty z ceną i lokalizacją. Statusy obejmują m.in. `OK`, `BLOCKED`, `TIME_LIMIT`, `HTTP_ERROR`, `NETWORK_ERROR` i `MANUAL_STOP`.
+
+## 📄 Pliki danych
+
+- `mieszkania_gh.csv` i `mieszkania_vps.csv` — rekordy podstawowe: `data_pobrania`, `tytul`, `cena`, `metraz`, `link`.
+- `mieszkania_complete.csv` — wzbogacona baza: `data_pobrania`, `tytul`, `cena`, `link`, `aneks`, `czynsz`, `pietro`, `pokoje`, `lokalizacja`, `rok_budowy`, `ogrzewanie`, `kaucja`, `stan`, `powierzchnia`, `data_aktualizacji`.
+- `blacklist.csv` — linki pomijane przez processor w kolejnych przebiegach.
+
+Pole `data_aktualizacji` oznacza dzień przetworzenia rekordu przez processor, a nie datę aktualizacji ogłoszenia w Otodom.
+
+## 🖥️ Narzędzia pomocnicze
+
+- `dashboard.py` udostępnia prosty dashboard Streamlit dla `mieszkania_complete.csv` (niedokończone).
+- `Streamlit_browser/` to przeglądarka ofert zapisana w CSV: pozwala wczytać plik z ofertami, filtrować i sortować rekordy, wybierać widoczne kolumny oraz eksportować przefiltrowany wynik.
+- `file_merge.py` scala wyniki z plików node'ów i ich czarnych list.
+
+## 🛠️ Technologie
+
+- **Języki:** Python 3.11, Bash.
+- **Biblioteki:** `pandas`, `beautifulsoup4`, `requests`, `fake-useragent`, `streamlit`, `watchdog`, `lxml`, `openpyxl`.
+- **Infrastruktura i automatyzacja:** Docker, Docker Compose, Linux, Raspberry Pi, GitHub Actions i Cron.
+
+---
+
+## 📈 Dziennik uruchomień
+
+Poniższe tabele są aktualizowane automatycznie po zakończeniu cyklu scrapera lub processora. Rejestrowane są zarówno przebiegi udane, jak i zakończone innym statusem.
 
 ## Scraper run history
 | Saved at | Found | Saved | Output file | Status |
