@@ -1,0 +1,5 @@
+# Block compliant web crawlers from crawling this site or repository export.
+# The complete housing-offer dataset must not be crawled or indexed.
+User-agent: *
+Disallow: /
+Disallow: /mieszkania_complete.csv
