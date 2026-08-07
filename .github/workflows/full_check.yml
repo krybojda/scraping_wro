@@ -44,8 +44,17 @@ jobs:
           [ -f run_vps.sh ] && bash -n run_vps.sh
 
       - name: 🧪 Testowe odpalenie skryptów .sh
+        env:
+          DISCORD_URL: ${{ secrets.DISCORD_URL }}
         shell: bash
         run: |
+          echo "DISCORD_URL length in GitHub Actions: ${#DISCORD_URL}"
+
+          if [ -z "${DISCORD_URL:-}" ]; then
+            echo "❌ DISCORD_URL is empty in GitHub Actions"
+            exit 1
+          fi
+
           # WYŁĄCZAMY -e, bo timeout (124) jest u nas OK
           set +e
 
@@ -57,6 +66,7 @@ jobs:
           export MAX_PAGES=1
           export MAX_EXECUTION_TIME=30
           export OUTPUT_FILE="test_smoke.csv"
+          export DISCORD_URL="${DISCORD_URL}"
 
           echo "---------------------------------------------------"
           echo "▶️ TEST 1: Odpalam run_rpi.sh (Limit 20s)..."
@@ -88,13 +98,26 @@ jobs:
       - name: Pobranie kodu
         uses: actions/checkout@v4
 
+      - name: 🧪 Sprawdzenie sekreta Discord
+        env:
+          DISCORD_URL: ${{ secrets.DISCORD_URL }}
+        run: |
+          echo "DISCORD_URL length in GitHub Actions: ${#DISCORD_URL}"
+          if [ -z "${DISCORD_URL:-}" ]; then
+            echo "❌ DISCORD_URL is empty in GitHub Actions"
+            exit 1
+          fi
+
       - name: 🐳 Budowa Obrazu Docker
         run: docker build -t test-scraper .
 
       - name: 🚀 Test uruchomienia Kontenera
+        env:
+          DISCORD_URL: ${{ secrets.DISCORD_URL }}
         run: |
           docker run --rm \
             -e MAX_PAGES=1 \
             -e MAX_EXECUTION_TIME=30 \
             -e OUTPUT_FILE="test_docker.csv" \
+            -e DISCORD_URL="${DISCORD_URL}" \
             test-scraper

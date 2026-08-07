@@ -22,6 +22,8 @@ BASE_URL = (
     "&direction=DESC&viewType=listing"
 )
 DISCORD_URL = os.getenv("DISCORD_URL", "")
+if DISCORD_URL:
+    DISCORD_URL = DISCORD_URL.strip()
 
 # Definiujemy sztywna liste kolumn - to jest "bezpiecznik".
 FINAL_COLUMNS = ["data_pobrania", "tytul", "cena", "metraz", "link"]
@@ -105,7 +107,11 @@ def send_discord_summary(run_status, public_ip):
     print(f"Plik wyjsciowy:       {FILE_NAME}")
     print("=" * 44 + "\n")
 
-    if not DISCORD_URL or "TWOJ_ID" in DISCORD_URL:
+    if not DISCORD_URL:
+        print("Discord webhook skipped: DISCORD_URL is empty or not passed to the process.")
+        return
+    if "TWOJ_ID" in DISCORD_URL:
+        print("Discord webhook skipped: DISCORD_URL still contains placeholder TWOJ_ID.")
         return
 
     ping_msg = ""
@@ -154,6 +160,8 @@ def send_discord_summary(run_status, public_ip):
         response = requests.post(DISCORD_URL, json=payload, timeout=10)
         if response.status_code >= 300:
             print(f"Discord webhook returned {response.status_code}: {response.text[:200]}")
+        else:
+            print(f"Discord webhook sent successfully: HTTP {response.status_code}")
     except Exception as exc:
         print(f"Discord webhook error: {exc}")
 
