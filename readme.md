@@ -1785,3 +1785,4 @@ Poniższe tabele są aktualizowane automatycznie po zakończeniu cyklu scrapera 
 | 2026-11-09 (pn) 03:16:26 | 0/1 | 2 | 2 | mieszkania_complete.csv | OK |
 | 2026-11-09 (pn) 19:03:21 | 0/1 | 61 | 61 | mieszkania_complete.csv | OK |
 | 2026-11-10 (wt) 05:48:21 | 0/1 | 10 | 10 | mieszkania_complete.csv | OK |
+| 2026-11-10 (wt) 17:26:28 | 0/1 | 52 | 51 | mieszkania_complete.csv | OK |
