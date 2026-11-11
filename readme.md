@@ -933,6 +933,7 @@ Poniższe tabele są aktualizowane automatycznie po zakończeniu cyklu scrapera 
 | 2026-11-10 (wt) 05:35:58 | 366 | 356 | mieszkania_gh.csv | OK |
 | 2026-11-10 (wt) 16:23:49 | 348 | 338 | mieszkania_gh.csv | OK |
 | 2026-11-11 (śr) 03:24:54 | 348 | 339 | mieszkania_gh.csv | OK |
+| 2026-11-11 (śr) 15:54:49 | 351 | 341 | mieszkania_gh.csv | OK |
 
 
 
